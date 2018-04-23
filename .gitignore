@@ -1,0 +1,16 @@
+.idea
+*pyc
+Works/*
+Z_Temp/
+test.HTML
+test.html
+vim*
+Tests/
+.DS_Store
+build
+dist
+basematic/basematic.egg*
+basematic.egg-info/
+basematic/build
+basematic/dist
+basematic/Tests/Datas

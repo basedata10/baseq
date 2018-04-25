@@ -3,8 +3,8 @@ from subprocess import Popen, PIPE, call
 from basematic.mgt import get_config, run_cmd
 
 def script(samples):
-    from basematic.bio.fastq import Files as FQfiles
-    samples = FQfiles.check_infiles(samples)
+    from basematic.bio.fastq import samplefile as FQfiles
+    samples = FQfiles.check_sample_files(samples)
     if len(samples) == 0:
         sys.exit("[error] No valid samples")
     else:
@@ -17,6 +17,8 @@ def bowtie2_sort_alignment(fastq, genome, path="./"):
 
     samfile = os.path.join(path, "sample.sam")
     bamfile = os.path.join(path, "sample.bam")
+    statsfile = os.path.join(path, "sample.stats.txt")
+
     print("[info] The bamfile will be write to: {}".format(bamfile))
 
     #Run Bowtie
@@ -27,4 +29,8 @@ def bowtie2_sort_alignment(fastq, genome, path="./"):
     samtools_sort_cmd = [samtools, 'sort -@ 8 -o', bamfile, samfile, ";", samtools, "index", bamfile, "; rm", samfile]
     run_cmd("samtools sort", " ".join(samtools_sort_cmd))
 
+    #run flagstats
+    cmd_stats = [samtools, "flagstat", bamfile, ">", statsfile]
+    run_cmd("samtools stats", " ".join(cmd_stats))
     return bamfile
+

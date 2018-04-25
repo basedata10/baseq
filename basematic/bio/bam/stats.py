@@ -10,3 +10,6 @@ def bam_depth(path, interval):
 
 def beIndexed(path):
     pass
+
+def bam_read_counts(bam, chr, star, end):
+    pass

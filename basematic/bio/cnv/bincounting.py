@@ -2,7 +2,7 @@ import sys, os, time, re
 from subprocess import Popen, PIPE, call
 from basematic.mgt import get_config, run_cmd
 
-def bin_counting(genome, bamfile):
+def bin_counting(genome, bamfile, out):
 
     import pandas as pd
     import bisect
@@ -42,11 +42,11 @@ def bin_counting(genome, bamfile):
         infos = data.split()
 
         #Filter on quality
-        #quality = int(infos[4])
-        # if quality<40:
-        #     continue
-        if re.search("XS:i", data):
+        quality = int(infos[4])
+        if quality<40:
             continue
+        # if re.search("XS:i", data):
+        #     continue
 
         #Counting reads to bins
         chr = infos[2]
@@ -62,5 +62,5 @@ def bin_counting(genome, bamfile):
 
     #print
     df_raw["counts"] = counts
-    print("[info] Save the bin count file to {}".format("./sample_hg19.txt"))
-    df_raw['counts'].to_csv("sample_hg19.txt", header=True, sep="\t")
+    print("[info] Save the bin count file to {}".format(out))
+    df_raw['counts'].to_csv(out, header=True, sep="\t")

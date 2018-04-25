@@ -1,4 +1,4 @@
-import click, sys
+import click, sys, os
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.group(context_settings=CONTEXT_SETTINGS)
 
@@ -16,7 +16,7 @@ def cli():
 
 def run_all(multiple, name, fq1, fq2, interval, dir, job):
     from basematic.mgt.config import configManager
-    from basematic.bio.fastq import Files as FQfiles
+    from basematic.bio.fastq import samplefile as FQfiles
     from basematic.bio.snv.gatk import GATK
     from basematic.utils.clean import cleanStr
     from basematic.file.Folder import EnsurePath, WriteFile
@@ -47,7 +47,7 @@ def run_all(multiple, name, fq1, fq2, interval, dir, job):
     EnsurePath(outDir, "OutPut")
 
     #Check Samples
-    samples = FQfiles.check_infiles(multiple, name, fq1, fq2)
+    samples = FQfiles.check_sample_files(multiple, name, fq1, fq2)
     if len(samples) == 0:
         sys.exit("[error] No valid samples")
     else:
@@ -107,3 +107,37 @@ def filter(path, outpath):
 def QC_enrich(bampath, interval, outpath):
     from .quality import QC_enrich
     QC_enrich(bampath, interval, outpath)
+
+@cli.command(short_help="Check the enrichment quality, input: bam, interval and outpath")
+@click.argument("bampath")
+@click.argument("interval")
+@click.argument("outpath")
+def enrich_saturation(bampath, interval, outpath):
+    from .quality import enrich_saturation
+    enrich_saturation(bampath, interval, outpath)
+
+#Prepare Web Datas
+@cli.command(short_help="Generating the datas for web view: basematic.io/viewcnv")
+@click.option('--path', '-p', default='', help="The path to the Process Folder")
+@click.option('--vcf_annovar', '-v', default='', help="The path to the Process Folder")
+def web_data(path, vcf_annovar):
+    from basematic.utils.buildresult import pack_web_datas
+    data = pack_web_datas()
+
+    #quality stats...
+    from .quality import parse_picard_wes_matrics
+    res = parse_picard_wes_matrics(path)
+    data.add_image("depth_density", "./density.png")
+    for k in res:
+        data.data[k] = res[k]
+
+    #SNV Table
+    from basematic.bio.snv.vcf import Annovar_Filter
+    click.echo('[info] Filter the VCF...')
+    res = Annovar_Filter(vcf_annovar).filter_1KGenome()
+
+    data.data["VCF"] = res.to_json(orient='split')
+    print(data.data.keys())
+    import json
+    with open("./SNV.json", "w") as file:
+        json.dump(data.data, file)

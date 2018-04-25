@@ -47,3 +47,9 @@ def serve(port):
         subprocess.call("python -m SimpleHTTPServer {}".format(port), shell=True)
     else:
         subprocess.call("python -m http.server {}".format(port), shell=True)
+
+@cli.command(short_help="mount_disk/")
+@click.argument("command")
+def notes(command):
+    print("lsblk -f")
+    print("mount /dev/sdb2 /mnt/path")

@@ -1,7 +1,7 @@
 import click
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
-from basematic.bio.fastq.Files import check_infiles
+from basematic.bio.fastq.samplefile import check_sample_files
 message = """
 Basematic-BAM: Stats on Bam File...
 """

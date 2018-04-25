@@ -2,6 +2,15 @@ import sys, os
 from basematic.mgt.check import isExist
 
 def QC_enrich(bampath, interval, outpath, fastMode=True):
+    """
+    Generate the
+    :param bampath: input bam
+    :param interval: genome regions
+    :param outpath: output
+    :param fastMode:
+    :return:
+        A density figure
+    """
     import subprocess
     import pandas as pd
     import matplotlib as mpl
@@ -48,9 +57,38 @@ def QC_enrich(bampath, interval, outpath, fastMode=True):
 
     print(bed.iloc[:,0].mean(), bed.iloc[:,0].median(), depth_bed/depth_all)
 
-    #Plot...
-    ax = bed.iloc[10000:100000,0].plot.kde()
-    #counts = bed.iloc[10000:100000, 0].value_counts(bins=100)
-    ax.set_xlim(0, 300)
-    fig = ax.get_figure()
-    fig.savefig("./figure.png")
+    # ax = bed.iloc[10000:100000,0].plot.kde()
+    # ax.set_xlim(0, 300)
+    # fig = ax.get_figure()
+    # fig.savefig("./figure.png")
+
+
+def enrich_saturation(bampath, interval, outpath):
+    """ Check the unique number of reads with different levels of sequencing depth...
+    """
+    
+    print("enrich_saturation analysis")
+
+def parse_picard_wes_matrics(path):
+    with open(path, 'r') as file:
+        lines = file.readlines()
+    names = lines[6].split()
+    datas = lines[7].split()
+
+    #stats
+    res = {}
+    res['Interval Size'] = int(datas[0])
+    res['Mean Coverage'] = float(datas[1])
+    res['PCT_30X'] = float(datas[18])
+
+    #density plot...
+    depth = [int(line.split()[0]) for line in lines[11:-1]]
+    coverage = [int(line.split()[1]) for line in lines[11:-1]]
+    coverage = [x*len(coverage)/sum(coverage) for x in coverage]
+    import matplotlib as mpl
+    mpl.use('Agg')
+    import matplotlib.pyplot as plt
+    plt.plot(depth, coverage)
+    plt.ylim((0, 10))
+    plt.savefig("./density.png")
+    return res

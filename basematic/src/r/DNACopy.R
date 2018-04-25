@@ -1,39 +1,33 @@
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+path_norm_counts = args[1]
+path_segs_out = args[2]
+
 library("DNAcopy")
 
 CBS = function(){
-  gc <- read.table(varbin.gc, header=F)
-  thisRatio <- read.table(varbin.data, header=F)
-  names(thisRatio) <- c("chrom", "chrompos", "abspos", "bincount", "ratio")
-  thisRatio$chrom <- chrom.numeric
-  a <- thisRatio$bincount + 1
-  thisRatio$ratio <- a / mean(a)
-  thisRatio$gc.content <- gc$gc.content
-  thisRatio$lowratio <- lowess.gc(thisRatio$gc.content, thisRatio$ratio)
-  
-  a <- quantile(gc$bin.length, 0.985)
-  thisRatioNobad <- thisRatio[which(bad[, 1] == 0), ]
-  
-  set.seed(25)
-  
-  CNA.object <- CNA(log(thisRatioNobad$lowratio, base=2), thisRatioNobad$chrom, thisRatioNobad$chrompos,
-                    data.type="logratio", sampleid=sample.name)
+
+  CNA.object <- CNA(
+    log(thisRatio$norm_count, base=2),
+    thisRatio$chrom, 
+    thisRatio$chrompos,
+    data.type="logratio"
+  )
   
   smoothed.CNA.object <- smooth.CNA(CNA.object)
-  segment.smoothed.CNA.object <- segment(smoothed.CNA.object, alpha=alpha, nperm=nperm, undo.splits="sdundo", undo.SD=undo.SD, min.width=min.width)
-  thisShort <- segment.smoothed.CNA.object[[2]]
-  m <- matrix(data=0, nrow=nrow(thisRatioNobad), ncol=1)
+
+  segment.smoothed.CNA.object <- segment(
+      smoothed.CNA.object, 
+      alpha = 0.1, 
+      nperm = 1000,
+      undo.splits = "sdundo", 
+      undo.SD = 0.1, 
+      min.width = 5
+      )
   
-  prevEnd <- 0
-  
-  for (i in 1:nrow(thisShort)) {
-    thisStart <- prevEnd + 1
-    thisEnd <- prevEnd + thisShort$num.marfk[i]
-    m[thisStart:thisEnd, 1] <- 2^thisShort$seg.mean[i]
-    prevEnd = thisEnd
-  }
-  
-  thisRatioNobad$seg.mean.LOWESS <- m[, 1]
-  return(list(ratioNobad=thisRatioNobad, short=thisShort))  
+  CNVsegs <- segment.smoothed.CNA.object[[2]]
+  CNVsegs$CN = 2^CNVsegs$seg.mean
+  return(CNVsegs)
 }
 
 PEAKS = function(){
@@ -50,14 +44,26 @@ PEAKS = function(){
       }
     }
   }
-  
+
   a3 <- amat[(1:counter),1]
   a3.95 <- sort(a3)[round(.95*counter)]
   a3d <- density(a3[which(a3 < a3.95)], n=1000)
-  
+
   if(callpeak=="callpeak"){
     cn1 <- a3d$x[which(peaks(as.vector(a3d$y), span=101))][2]
   } else {
     cn1 <- 0.5
   }
 }
+
+#Read Normalize Bin Counts
+thisRatio <- read.csv(path_norm_counts, header=T)
+names(thisRatio) <- c("id", "chrom", "chrompos", "abspos", "norm_count")
+print(thisRatio[1:10,])
+
+#Run the CBS Function
+segments = CBS()
+write.csv(segments, path_segs_out)
+
+
+

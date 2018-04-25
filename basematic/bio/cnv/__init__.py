@@ -23,7 +23,7 @@ def run_pipeline(sample_file):
 @click.argument("fastq")
 @click.option('--genome', '-g', default='hg19', help="genome version name, like: hg19")
 def run_alignment(fastq, genome):
-    from .align import bowtie2_sort_alignment
+    from .alignment import bowtie2_sort_alignment
     bowtie2_sort_alignment(fastq, genome)
 
 #Run Bin Counting

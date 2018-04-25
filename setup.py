@@ -54,7 +54,7 @@ setup(
             'basematic-CNV=basematic.bio.cnv:cli',
             'basematic-BAM=basematic.bio.bam:cli',
             'basematic-SNV=basematic.bio.snv._cmd:cli',
-            'basematic-RNA=basematic.bio.rnaseq:cli',
+            'basematic-RNA=basematic.bio.rna._cmd:cli',
         ]
     }
 )

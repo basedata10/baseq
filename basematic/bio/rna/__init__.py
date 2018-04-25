@@ -21,8 +21,8 @@ def run_drops(name, fq1, fq2, genome, dir):
     samples = check_sample_files("", name, fq1, fq2)
     if samples == []:
         sys.exit("[error] No valid sample, Exit.")
-    from basematic.bio.rnaseq.barcode import getBarcode
-    from basematic.bio.rnaseq.barcode_stats import barcode_aggregate
+    from basematic.bio.rna.barcode import getBarcode
+    from basematic.bio.rna.barcode_stats import barcode_aggregate
     getBarcode(fq1, "./barcode_count.csv", "10X", 20)
     barcode_aggregate(barcode_count="./barcode_count.csv")
 

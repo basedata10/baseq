@@ -94,7 +94,7 @@ def getUMI(protocol, seq1, UMI_pos):
         UMI = seq1[len(barcode) + 22:len(barcode) + 22 + 6]
     return UMI
 
-from basematic.bio.rnaseq.barcode import get_barcode
+from basematic.bio.rna.barcode import get_barcode
 def barcode_split(fq1, fq2, barcode_info, protocol, outdir):
     read1 = Path_Iterator(fq1, 10 * 1000 * 1000, 4)
     read2 = Path_Iterator(fq2, 10 * 1000 * 1000, 4)

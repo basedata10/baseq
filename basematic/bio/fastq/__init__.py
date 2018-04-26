@@ -7,6 +7,12 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 def cli():
     click.echo("Basematic Fastq...")
 
+#sampling from a fastq file ...
+@cli.command(short_help="Print Docs")
+def doc():
+    from .docs import print_doc
+    print_doc()
+
 @cli.command(short_help="Quality Control")
 @click.option('--samplefile', '-m', default='', help='sample file lists')
 @click.option('--fq1', '-1', default='', help='fastq1')
@@ -17,12 +23,12 @@ def QC(samplefile, fq1, fq2, out):
     print("[info] Qualtity control of the fastq files ...")
     print("[info] The result file will be write to {}".format(out))
     from basematic.bio.fastq.quality import fastq_basecontent_quality
-    from .samplefile import check_sample_files
+    from .sample_file import check_sample_files
     result = []
 
-    if samplefile:
+    if sample_file:
         print("[info] Read the samples infos the file...")
-        samples = check_sample_files(samplefile)
+        samples = check_sample_files(sample_file)
         print(samples)
     else:
         if fq1 and os.path.exists(fq1):
@@ -50,8 +56,18 @@ def sampling(path):
 @cli.command(short_help="List all the Fastq Files in Path (not include the subdir)")
 @click.argument("path")
 @click.option('--subdir', '-s', default='', help='The files are in the subdirectory')
-@click.option('--write', '-f', default='./samples.txt', help='Write sample infos to this path (./samples.fqs.txt)')
-def list_samples(path, write, subdir):
+@click.option('--save', '-f', default='./samples.txt', help='Write sample infos to this path (./samples.fqs.txt)')
+def list_samples(path, save, subdir):
     print("[info] List fastq files in {}".format(path))
-    from .samplefile import list_fastq_files
-    list_fastq_files(path, write)
+    from .sample_file import list_fastq_files
+    list_fastq_files(path, save)
+
+@cli.command(short_help="Split the fastq into diffrent barcodes")
+@click.argument("barcode")
+@click.argument("fastq")
+@click.argument("outprefix")
+@click.option('--suffix', '-s', default='.fq', help='')
+def split_barcode(barcode, fastq, outprefix, suffix):
+    print("[info] Split the barcodes...")
+    from .split_barcode import split_barcode
+    split_barcode(barcode, fastq, outprefix, suffix)

@@ -6,13 +6,15 @@ def bin_counting(genome, bamfile, out):
 
     import pandas as pd
     import bisect
+    from .files import dynamicbin_reader
 
     dynamic_bin = get_config("CNV_ref_"+genome, "dynamic_bin")
-    df_raw = pd.read_table(dynamic_bin, names=["chr", "start", 'absstart', 'end', 'range', 'length', 'GC'],sep=" ")
 
-    chrs = df_raw["chr"].tolist()
-    start = df_raw["start"].tolist()
-    end = df_raw["end"].tolist()
+    df_dynamicbin = dynamicbin_reader(dynamic_bin)
+
+    chrs = df_dynamicbin["chr"].tolist()
+    start = df_dynamicbin["start"].tolist()
+    end = df_dynamicbin["end"].tolist()
 
     #Build region position for each chromosome...
     chr_bin_starts = {}
@@ -61,6 +63,6 @@ def bin_counting(genome, bamfile, out):
             counts[idx] += 1
 
     #print
-    df_raw["counts"] = counts
+    df_dynamicbin["counts"] = counts
     print("[info] Save the bin count file to {}".format(out))
-    df_raw['counts'].to_csv(out, header=True, sep="\t")
+    df_dynamicbin['counts'].to_csv(out, header=True, sep="\t")

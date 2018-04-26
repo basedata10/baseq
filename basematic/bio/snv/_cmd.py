@@ -16,7 +16,7 @@ def cli():
 
 def run_all(multiple, name, fq1, fq2, interval, dir, job):
     from basematic.mgt.config import configManager
-    from basematic.bio.fastq import samplefile as FQfiles
+    from basematic.bio.fastq import sample_file as FQfiles
     from basematic.bio.snv.gatk import GATK
     from basematic.utils.clean import cleanStr
     from basematic.file.Folder import EnsurePath, WriteFile

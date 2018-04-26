@@ -2,6 +2,7 @@ import os, sys, re
 
 def check_sample_files(samplefile="", name="", fq1="", fq2=""):
     samples = []
+    #Check sample lists
     if samplefile:
         print("[info] use multiple mode, the name, fq1, fq2")
         if os.path.exists(samplefile):
@@ -10,13 +11,17 @@ def check_sample_files(samplefile="", name="", fq1="", fq2=""):
                 lines = infile.readlines()
             for line in lines:
                 info = line.split()
+                #Less than 2 columns
                 if len(info)<2:
                     print("[warning] Line do not contains sample ...")
                 sample = info[0]
                 fq1 = info[1]
-                fq2 = info[2]
-                if os.path.exists(fq1):
-                    if os.path.exists(fq2):
+                if len(info)>2:
+                    fq2 = info[2]
+                else:
+                    fq2 = ""
+                if fq1 and os.path.exists(fq1):
+                    if fq2 and os.path.exists(fq2):
                         print("[info] '{}' is Paired End Sample, fq1: '{}' fq2:'{}'".format(sample, fq1, fq2))
                         samples.append([sample, os.path.abspath(fq1), os.path.abspath(fq2)])
                     else:
@@ -26,7 +31,7 @@ def check_sample_files(samplefile="", name="", fq1="", fq2=""):
                     print("[Exit] No valid file for {}".format(sample))
         else:
             sys.exit("[Error] Sample Info File do not exist {}".format(samplefile))
-
+    #Check Single Sample...
     else:
         sample = name
         if os.path.exists(fq1):

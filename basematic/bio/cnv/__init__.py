@@ -7,12 +7,18 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 def cli():
     click.echo("Welcome to Basematic-CNV")
 
+#Print the Doc...
+@cli.command(short_help="Print the document...")
+def doc():
+    from .docs import print_doc
+    print_doc()
+
 #Run the CNV pipeline for Lists of Samples
 @cli.command(short_help="Run the whole pipeline for a sample list")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
-@click.option('--species', '-s', default='', help="Species hg19 or mm10")
+@click.option('--genome', '-s', default='', help="Species hg19 or mm10")
 @click.option('--outdir', '-d', default='./CNV_process', help="The scripts and output path")
-def run_pipeline(sample_file):
+def run_pipeline(sample_file, genome):
     samples = []
     with open(sample_file, 'r') as infile:
         samples = infile.readlines()

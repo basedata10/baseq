@@ -3,7 +3,7 @@ from subprocess import Popen, PIPE, call
 from basematic.mgt import get_config, run_cmd
 
 def script(samples):
-    from basematic.bio.fastq import samplefile as FQfiles
+    from basematic.bio.fastq import sample_file as FQfiles
     samples = FQfiles.check_sample_files(samples)
     if len(samples) == 0:
         sys.exit("[error] No valid samples")

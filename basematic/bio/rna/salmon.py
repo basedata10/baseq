@@ -1,6 +1,7 @@
-import sys, os, time, re
+import sys, os, time, re, json
 from subprocess import Popen, PIPE, call
 from basematic.mgt import get_config, run_cmd
+from basematic.bio.fastq.sample_file import check_sample_files
 
 def run_build_salmon_index():
     pass
@@ -23,7 +24,6 @@ def run_salmon(fq1, fq2, genome, outdir):
     run_cmd("Salmon Quantification", " ".join(salmon_cmd))
 
 def run_multiple_salmons(path, genome, outdir):
-    from basematic.bio.fastq.sample_file import check_sample_files
     samples = check_sample_files(path)
     print(samples)
     if not os.path.exists(outdir):
@@ -53,9 +53,65 @@ def run_multiple_salmons(path, genome, outdir):
         file.writelines("\n".join(["bash " + x for x in script_lists]))
     print("[info] Main script written in {}".format(script_main_path))
 
-#Get SALMON STATS...
-def get_salmon_stats(outdir):
-    pass
 
-def build_tpm_table():
-    pass
+# Build TPM and QC ...
+def build_tpm_table(processdir, samplefile, outpath):
+    samples = check_sample_files(samplefile)
+    print(samples)
+    sample_names = [sample[0] for sample in samples]
+    tpm_file_path = outpath + ".tpm.txt"
+    count_file_path = outpath + ".count.txt"
+    qc_file_path = outpath + ".qc.txt"
+
+    tpm = {}
+    count = {}
+    qc = ["\t".join(['sample', 'reads', 'mapped', 'ratio', 'genecounts'])]
+    for sample in sample_names:
+        #build TPM table
+        sample_TPM = []
+        salmon_gene_path = os.path.join(processdir, sample, 'quant.genes.sf')
+        with open(salmon_gene_path, 'r') as infile:
+            infile.readline()
+            for line in infile:
+                infos = re.split("\t", line)
+                gene = infos[0]
+                sample_TPM.append(float(infos[3]))
+                if not gene in tpm:
+                    tpm[gene] = [float(infos[3])]
+                    count[gene] = [float(infos[4])]
+                else:
+                    tpm[gene].append(float(infos[3]))
+                    count[gene].append(float(infos[4]))
+
+        #Genes Detected
+        genes_TPM_1 = sum([1 for x in sample_TPM if x>=1])
+
+        #build QC data
+        metainfo = os.path.join(processdir, sample, 'aux_info', 'meta_info.json')
+        with open(metainfo, "r") as file:
+            qc_info = json.load(file)
+            qc_sample = [sample, qc_info["num_processed"], qc_info["num_mapped"], qc_info["percent_mapped"], genes_TPM_1]
+            qc.append("\t".join([str(x) for x in qc_sample]))
+
+    #Write TPM
+    tpm_file = open(tpm_file_path, "w")
+    tpm_file.write("\t".join(["gene"] + sample_names) + "\n")
+    for gene in tpm:
+        sum_tpm_genes = sum(tpm[gene])
+        if sum_tpm_genes > 0:
+            tpm_file.write("\t".join([gene] + [str(x) for x in tpm[gene]]) + "\n")
+    tpm_file.close()
+
+    #Write Counts
+    count_file = open(count_file_path, "w")
+    count_file.write("\t".join(["gene"] + sample_names) + "\n")
+    for gene in count:
+        sum_tpm_genes = sum(count[gene])
+        if sum_tpm_genes > 0:
+            count_file.write("\t".join([gene] + [str(x) for x in count[gene]]) + "\n")
+    count_file.close()
+
+    #Write QC Table
+    qc_file = open(qc_file_path, "w")
+    qc_file.writelines("\n".join(qc))
+    qc_file.close()

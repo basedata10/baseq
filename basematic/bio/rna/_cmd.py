@@ -35,6 +35,16 @@ def aggr_TPM_QC(sample_file, processdir, outpath):
     print("[info] Aggregate TPM into {}".format(outpath))
     build_tpm_table(processdir, sample_file, outpath)
 
+
+@cli.command(short_help="Run DESeq2")
+@click.option('--groupfile', '-g', default='', help="Tab seprated file: sample, group")
+@click.option('--tpmfile', '-t', default='./', help="TPM filepath")
+@click.option('--outpath', '-o', default='./tpm.txt', help="Prefix of the TPM and Count file")
+def deseq2(tpmfile, groupfile, outpath):
+    from .diff_express import deseq2
+    print("[info] DESeq2 {}".format(outpath))
+    deseq2(tpmfile, groupfile, outpath)
+
 @cli.command(short_help="inDrop/Drop-Seq/10X")
 @click.option('--genome', help="human/mouse/mixed")
 @click.option('--name', '-n', default='sample', help="sample name")

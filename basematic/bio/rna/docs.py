@@ -7,6 +7,11 @@ doc = """
     #Aggregate: TPM Counts and QC...
     basematic-RNA aggr_tpm_qc -m samples.txt -d ./salmon_process -o ./salmon
     
+    #scatter plot...
+    basematic-RNA plot_corelation_fig -1 sample03 -2 sample02 -t ./exptpm.txt
+    #heatmap for a tpm... (correlation_heatmap.png)
+    basematic-RNA corr_heatmap -t ./tpm.txt -n correlation_heatmap  
+    
     basematic-RNA qc_tpm -o ./table_tpm.txt
     basematic-RNA diff_genes --groupfile ./file
 
@@ -17,6 +22,9 @@ doc = """
 [Step Detail]:
     qc_tpm ...
     
+[to do]:
+#check tpm files, list their samples...
+
 """
 
 def print_doc():

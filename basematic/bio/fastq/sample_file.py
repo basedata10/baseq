@@ -1,8 +1,8 @@
 import os, sys, re
 
 def check_sample_files(samplefile="", name="", fq1="", fq2=""):
+    """Check sample and fastq paths from samplefile and fqs"""
     samples = []
-    #Check sample lists
     if samplefile:
         print("[info] use multiple mode, the name, fq1, fq2")
         if os.path.exists(samplefile):

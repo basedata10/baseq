@@ -4,9 +4,7 @@ from basematic.mgt import get_config, run_cmd
 from basematic.bio.fastq.sample_file import check_sample_files
 
 import pandas as pd
-import numpy as nb
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+
 
 def run_build_salmon_index():
     pass
@@ -121,22 +119,30 @@ def build_tpm_table(processdir, samplefile, outpath):
     qc_file.writelines("\n".join(qc))
     qc_file.close()
 
-def Plot_corelation_fig(name1,name2,outdir):
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
-        print("[info] Create outdir in: {}".format(outdir))
-    tpm_file_path = outdir + "tpm.txt"
-    tpm_file = pd.read_table(tpm_file_path, sep='\n')
-    sample_names = list(tpm_file[0,])
-    print(sample_names)
-    print(tpm_file[1])
+def Plot_corelation_fig(name1, name2, counttable):
+    import matplotlib as mpl
+    mpl.use('Agg')
+    import matplotlib.pyplot as plt
+
+    #tpm_file_path = outdir + "tpm.txt"
+    tpm_file = pd.read_table(counttable)
+    #Show sample names
+    sample_names = list(tpm_file.columns.values)
+
+    print("[info] Figure axis log scale, min 1, max 5000;")
+
     if name1 and name2 in sample_names:
-        plot_data = tpm_file[tpm_file[name1] > 0 & tpm_file[name2] > 0]
-        plt.plot(plot_data[name1],plot_data[name2])
+        plot_data = tpm_file[(tpm_file[name1] > 0) | (tpm_file[name2] > 0)]
+        plt.figure(figsize=(5, 5))
+        plt.scatter(plot_data[name1], plot_data[name2], s=3)
         plt.xscale('log')
         plt.yscale('log')
-        plt.savefig(os.path.join(outdir,'cor_fig.png'))
+        plt.xlim(1, 5000)
+        plt.ylim(1, 5000)
+        plt.savefig(os.path.join('cor_fig.png'), )
+
     elif not name1 in sample_names:
         print("[error] undefined sample name {}".format(name1))
+
     elif not name2 in sample_names:
         print("[error] undefined sample name {}".format(name2))

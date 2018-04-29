@@ -19,28 +19,42 @@ def doc():
 @click.option('--fq2', '-2', default='', help='fastq2')
 @click.option('--out', '-o', default='./qc.txt', help='file path (./qc.txt)')
 def QC(samplefile, fq1, fq2, out):
-    import pandas as pd
-    print("[info] Qualtity control of the fastq files ...")
+    print("[info] Qualtity Static of the Fastq Files ...")
     print("[info] The result file will be write to {}".format(out))
     from basematic.bio.fastq.quality import fastq_basecontent_quality
     from .sample_file import check_sample_files
     result = []
+    samples = check_sample_files(samplefile, "sample", fq1, fq2)
+    print(samples)
 
-    if sample_file:
-        print("[info] Read the samples infos the file...")
-        samples = check_sample_files(sample_file)
-        print(samples)
-    else:
-        if fq1 and os.path.exists(fq1):
-            result.append(fastq_basecontent_quality(fq1))
-        else:
-            sys.exit("[error] fastq1 is not a valid path, exit...")
-        if fq2:
-            if os.path.exists(fq2):
-                result.append(fastq_basecontent_quality(fq2))
-            else:
-                sys.exit("[error] fastq2 is not a valid path, exit...")
-    #pd.concat(result).to_csv(out, sep="\t")
+    import xlsxwriter
+    workbook = xlsxwriter.Workbook('QC.xlsx')
+    workbook.formats[0].set_font_size(12)
+    workbook.formats[0].set_font_name('arial')
+    format_main = workbook.add_format({'bold': False, 'font_size': 12, 'font_name': 'arial'})
+    format_header = workbook.add_format({'bold': True, 'font_size': 15, 'font_name': 'arial'})
+    #prepare Page...
+    qcpage = workbook.add_worksheet("Report")
+    qcpage.set_column('D:D', 40)
+    qcpage.set_column('E:E', 40)
+    qcpage.write('A1', 'Sample', format_header)
+    qcpage.write('B1', 'MeanQuality', format_header)
+    qcpage.write('C1', 'BiasIndex', format_header)
+    qcpage.write('D1', 'BasePlot', format_header)
+    qcpage.write('E1', 'QualityPlot', format_header)
+
+    #build the Excel...
+    for idx, sample in enumerate(samples):
+        print(idx, sample)
+        result = fastq_basecontent_quality(sample[0], sample[1])
+        qcpage.set_row(idx+1, 120)
+        qcpage.write(idx+1, 0, sample[0], format_main)
+        qcpage.write(idx+1, 1, result[2], format_main)
+        qcpage.write(idx+1, 2, result[3], format_main)
+        qcpage.insert_image(idx+1, 3, result[0], {"x_scale":0.7, "y_scale":0.7, 'x_offset': 5, 'y_offset': 5})
+        qcpage.insert_image(idx+1, 4, result[1], {"x_scale":0.7, "y_scale":0.7, 'x_offset': 5, 'y_offset': 5})
+
+    workbook.close()
 
 #sampling from a fastq file ...
 @cli.command(short_help="Quality Control")

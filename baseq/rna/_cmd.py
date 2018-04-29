@@ -13,7 +13,7 @@ def doc():
     print_doc()
 
 #Run the CNV pipeline for Lists of Samples
-@cli.command(short_help="RNA-Seq")
+@cli.command(short_help="salmon quatification")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
 @click.option('--genome', '-g', default='hg19', help="Species hg19 or mm10/mm38")
 @click.option('--fq1', '-1', default='', help="Fastq 1")
@@ -25,6 +25,22 @@ def run_salmon(sample_file, fq1, fq2, genome, outdir):
         run_multiple_salmons(sample_file, genome, outdir)
     else:
         run_salmon(fq1, fq2, genome, outdir)
+
+#run hisat, samtools and cufflinks
+@cli.command(short_help="hisat alignment and cufflinks quatification")
+@click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
+@click.option('--genome', '-g', default='hg19', help="Species hg19 or mm10/mm38")
+@click.option('--fq1', '-1', default='', help="Fastq 1")
+@click.option('--fq2', '-2', default='', help="Fastq 2")
+@click.option('--outdir', '-d', default='', help="The scripts and output path")
+def run_hisat(sample_file, fq1, fq2, genome, outdir):
+    from .hisat import run_hisat, run_multiple_hisat
+    if sample_file:
+        run_multiple_hisat(sample_file, genome, outdir)
+    else:
+        run_hisat(fq1, fq2, genome, outdir)
+
+
 
 @cli.command(short_help="Aggregate TPM and Counts and QC Tables for multiple samples")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")

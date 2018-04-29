@@ -2,29 +2,64 @@ import sys, os, time, re, json
 from subprocess import Popen, PIPE, call
 from baseq.mgt import get_config, run_cmd
 from baseq.fastq.sample_file import check_sample_files
-
 import pandas as pd
 
-def run_build_salmon_index():
+def run_build_hisat_index():
     pass
 
-def run_salmon(fq1, fq2, genome, outdir):
+script = """
+     cd {}
+    {} -x {} -1 {} -2 {} -p 8 -S hisat2_align.sam
+    {} view -b -u -S hisat2_align.sam > hisat2_align.bam
+    {} sort -@ 8 hisat2_align.bam -o hisat2_sorted.bam
+    {} index hisat2_sorted.bam
+    rm hisat_align.sam hisat2_align.bam
+    {} -o {} -p 8 -g {} hisat2_sorted.bam
+    """
+script1 = """
+     cd {}
+    {} -x {} -U {} -p 8 -S hisat2_align.sam
+    {} view -b -u -S hisat2_align.sam > hisat2_align.bam
+    {} sort -@ 8 hisat2_align.bam -o hisat2_sorted.bam
+    {} index hisat2_sorted.bam
+    rm hisat_align.sam hisat2_align.bam
+    {} -o {} -p 8 -g {} hisat2_sorted.bam
+    """
+def run_hisat(fq1, fq2, genome, outdir):
     print(fq1, fq2, genome, outdir)
-    salmon = get_config("RNA", "salmon")
-    salmon_ref = get_config("RNA_ref_"+genome, "salmon_index")
-    gene_map = get_config("RNA_ref_"+genome, "gene_map")
+    hisat = get_config("RNA", "hisat")
+    samtools = get_config("RNA", "samtools")
+    cufflinks = get_config("RNA", "cufflinks")
+    hisat_ref = get_config("RNA_ref_"+genome, "hisat_index")
+    cufflinks_anno = get_config("RNA_ref_"+genome, "cufflinks_anno")
+    #gene_map = get_config("RNA_ref_"+genome, "gene_map")
 
-    # Run salmon
+    # Run hisat, samtools and cufflinks
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+        print("[info] Create outdir in: {}".format(outdir))
     if fq1 and fq2 and os.path.exists(fq1) and os.path.exists(fq2):
-        salmon_cmd = [salmon, 'quant', '-i', salmon_ref, '-l A', '-1', fq1, '-2', fq2, '-p 8', '-g', gene_map, '-o', outdir]
+        hisat_pipe_cmd = script.format(outdir,
+               hisat, hisat_ref, fq1, fq2,
+               samtools,
+               samtools,
+               samtools,
+               cufflinks,outdir,cufflinks_anno)
+
     elif fq1 and os.path.exists(fq1):
-        salmon_cmd = [salmon, 'quant', '-i', salmon_ref, '-l A', '-r', fq1, '-p 8', '-g', gene_map, '-o', outdir]
+        hisat_pipe_cmd = script1.format(outdir,
+               hisat, hisat_ref, fq1,
+               samtools,
+               samtools,
+               samtools,
+               cufflinks,outdir,cufflinks_anno)
+
     else:
         pass
+    run_cmd("hisat and cufflinks analysis"," ".join(hisat_pipe_cmd))
 
-    run_cmd("Salmon Quantification", " ".join(salmon_cmd))
 
-def run_multiple_salmons(path, genome, outdir):
+def run_multiple_hisat(path, genome, outdir):
     samples = check_sample_files(path)
     print(samples)
     if not os.path.exists(outdir):
@@ -42,9 +77,9 @@ def run_multiple_salmons(path, genome, outdir):
         else:
             print("[info] Outdir for sample {} exists in: {}".format(name, path))
         if sample[2]:
-            script = "baseq-RNA run_salmon -1 {} -2 {} -g {} -d {}".format(sample[1], sample[2], genome, path)
+            script = "baseq-RNA run_hisat -g {} -1 {} -2 {} -d {}".format(genome, sample[1], sample[2], path)
         else:
-            script = "baseq-RNA run_salmon -1 {} -g {} -d {}".format(sample[1], genome, path)
+            script = "baseq-RNA run_hisat -g {} -1 {} -d {}".format(genome, sample[1],path)
         with open(script_path, "w") as file:
             file.writelines(script+"\n")
             print("[info] work script written in {}".format(script_path))

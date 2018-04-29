@@ -1,13 +1,10 @@
 import pandas as pd
-try:
-    import cPickle as pickle
-except:
-    import _pickle as pickle
+from baseq.utils.file_reader import read_file_by_lines
 
 def HammingDistance(seq1, seq2):
     return sum([1 for x in zip(seq1, seq2) if x[0] != x[1]])
 
-def get_barcode(protocol, seq):
+def cut_seq_barcode(protocol, seq):
     if protocol == "10X":
         return seq[0:16]
     if protocol == "dropseq":
@@ -26,17 +23,16 @@ def get_barcode(protocol, seq):
                     break
         return ""
 
-from baseq.utils.file_reader import read_file_by_lines
-
-def getBarcode(path, output, protocol, min_reads):
+def count_barcodes(path, output, protocol, min_reads):
     bc_counts = {}
     index = 0
     print("[info] Process the top 10M reads in {}".format(path))
-    print("[info] The protocol is {}".format(protocol))
+    print("[info] The Method is : {}".format(protocol))
+    print("[info] Barcode with less {} reads is discard".format(min_reads))
     lines = read_file_by_lines(path, 10 * 1000 * 1000, 4)
     for line in lines:
         index += 1
-        bc = get_barcode(protocol, line[1])
+        bc = cut_seq_barcode(protocol, line[1])
         if bc == "":
             continue
         if bc in bc_counts:
@@ -51,9 +47,6 @@ def getBarcode(path, output, protocol, min_reads):
         if v >= min_reads:
             bc_counts_filter.append([k, v])
 
-    print("[info] Write the Barcode depth file to {}".format(output))
+    print("[info] Write the Barcode depth CSV to {}".format(output))
     df = pd.DataFrame(bc_counts_filter, columns=["barcode", "counts"])
     df.to_csv(output, sep=",", index=False)
-
-def splitBarcode(outfile, prefix=2):
-    pass

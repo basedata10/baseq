@@ -1,5 +1,4 @@
-import click, sys, os
-from baseq.mgt.resource import ResourceModel
+import click
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -73,8 +72,8 @@ def run_CBS(count_file, out):
 @click.option('--cbs_file', '-c', default='', help="CBS File, Genrated from run_CBS command")
 @click.option('--out', '-o', default='./', help="CBS file...")
 def run_plotgenome(count_file, cbs_file, out):
-    from .plot_genome import PlotGenomes
-    PlotGenomes(count_file, cbs_file, out)
+    from baseq.cnv.plots.plot_genome import plot_genome
+    plot_genome(count_file, cbs_file, out)
 
 #Prepare Web Datas
 @cli.command(short_help="Generating the datas for web view: baseq.io/viewcnv")

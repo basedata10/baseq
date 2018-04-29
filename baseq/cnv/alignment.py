@@ -33,4 +33,3 @@ def bowtie2_sort_alignment(fastq, genome, path="./"):
     cmd_stats = [samtools, "flagstat", bamfile, ">", statsfile]
     run_cmd("samtools stats", " ".join(cmd_stats))
     return bamfile
-

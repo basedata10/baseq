@@ -1,9 +1,0 @@
-[console_scripts]
-baseq = baseq.cmd:cli
-baseq-BAM = baseq.bio.bam:cli
-baseq-CNV = baseq.bio.cnv:cli
-baseq-RNA = baseq.bio.rnaseq:cli
-baseq-SNV = baseq.bio.snv._cmd:cli
-baseq-fastq = baseq.bio.fastq:cli
-baseq-manage = baseq.mgt:cli
-

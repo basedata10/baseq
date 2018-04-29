@@ -60,26 +60,42 @@ class WhiteListCheck:
                 return 0
 
 def barcode_aggregate(white_list="10X", protocol="", barcode_count="", max_cell=20000, min_reads=2000, output="./bc_stats.txt"):
-    print("[error] Starts stating the barcodes counts from {}".format(barcode_count))
+    print("[info] Stats the barcodes counts in {}".format(barcode_count))
     df = pd.read_csv(barcode_count).sort_values("counts", ascending=False)
     df["mismatch_reads"] = 0
-    df.set_index('barcode')
-
-    # Aggregate by 1 Mismatch
+    df["mismatch_bc"] = ""
+    df["mutate_last_base"] = 0
+    df = df.reset_index(drop=True)
+    data = df.values.tolist() #matrix: barcode/reads/mismatch_reads
+    bcs = [x[0] for x in data] #barcode names
+    #Aggregate by 1 Mismatch
     bc_counts = len(df.index)
     for id in range(0, bc_counts):
-        bc = df.loc[id, 'barcode']
+        bc = df.iloc[id, 0]
+        count = df.iloc[id, 1]
+        print(bc, df.iloc[id, 1])
+
+        if df.iloc[id, 1] == 0 or count <= 0.25 * min_reads:
+            continue
+
         bc_mis = mutate_single_base(bc)
-        df_mis = df.loc[df['barcode'].isin(bc_mis)]
-        df.loc[id, 'mismatch_reads'] = sum(df_mis['counts'])
-        df.loc[df['barcode'].isin(bc_mis), 'counts'] = 0
+
+        #index for these mismatches
+        index = df['barcode'].isin(bc_mis)
+        df_mis = df.loc[index].sort_values("counts", ascending=False)
+        barcode_mis = df_mis['barcode'].tolist()
+
+        #determine if mutate in the last base
+        if len(barcode_mis)>=3 and sum([1 for x in barcode_mis[0:3] if x[0:-1]==bc[0:-1]])==3:
+            df.iloc[id, 4] = 1
+
+        df.iloc[id, 2] = sum(df_mis['counts'])
+        df.iloc[id, 3] = "_".join(df_mis['barcode'])
+        df.loc[index, "counts"] = 0
+
     print("[info] Filtering the barcodes exceeds number {}".format(min_reads))
-    df = df.loc[df['counts']>=min_reads]
-
-    # Detemine UMI Start Pos
-
-    df["UMI_pos"] = 0
-    df.to_csv(output)
+    df = df.loc[df['counts'] >= min_reads]
+    df.to_csv(output, index=False)
 
 def getUMI(protocol, seq1, UMI_pos):
     if protocol == "10X":
@@ -93,8 +109,8 @@ def getUMI(protocol, seq1, UMI_pos):
         UMI = seq1[len(barcode) + 22:len(barcode) + 22 + 6]
     return UMI
 
-from baseq.rna.dropseq.barcode import get_barcode
-def barcode_split(fq1, fq2, barcode_info, protocol, outdir):
-    read1 = read_file_by_lines(fq1, 10 * 1000 * 1000, 4)
-    read2 = read_file_by_lines(fq2, 10 * 1000 * 1000, 4)
-    bc = get_barcode(read1[1])
+# from baseq.rna.dropseq.barcode_counting import cut_seq_barcode
+# def barcode_split(fq1, fq2, barcode_info, protocol, outdir):
+#     read1 = read_file_by_lines(fq1, 10 * 1000 * 1000, 4)
+#     read2 = read_file_by_lines(fq2, 10 * 1000 * 1000, 4)
+#     bc = cut_seq_barcode(read1[1])

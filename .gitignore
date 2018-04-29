@@ -9,8 +9,8 @@ Tests/
 .DS_Store
 build
 dist
-basematic/basematic.egg*
-basematic.egg-info/
-basematic/build
-basematic/dist
-basematic/Tests/Datas
+baseq/baseq.egg*
+baseq.egg-info/
+baseq/build
+baseq/dist
+baseq/Tests/Datas

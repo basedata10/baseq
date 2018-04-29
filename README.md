@@ -1,6 +1,6 @@
-# BaseMatics Tools
+# baseqs Tools
 
-This is a Tools for basematic applications... [Python Packaging User
+This is a Tools for baseq applications... [Python Packaging User
 Guide][packaging guide]'s [Tutorial on Packaging and Distributing
 Projects][distribution tutorial].
 

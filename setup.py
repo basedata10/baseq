@@ -10,8 +10,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='basematic',
-    version='0.1.1',
+    name='baseq',
+    version='0.1.0',
     description='Tools For Bioinformatics',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -29,7 +29,7 @@ setup(
 
     keywords = 'sample setuptools development',
 
-    packages = find_packages(include=['basematic*']),
+    packages = find_packages(include=['baseq*']),
 
     install_requires=[
         'pandas',
@@ -48,13 +48,13 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'basematic=basematic.cmd:cli',
-            'basematic-manage=basematic.mgt:cli',
-            'basematic-fastq=basematic.bio.fastq:cli',
-            'basematic-CNV=basematic.bio.cnv:cli',
-            'basematic-BAM=basematic.bio.bam:cli',
-            'basematic-SNV=basematic.bio.snv._cmd:cli',
-            'basematic-RNA=basematic.bio.rna._cmd:cli',
+            'baseq=baseq.cmd:cli',
+            'baseq-manage=baseq.mgt:cli',
+            'baseq-fastq=baseq.fastq:cli',
+            'baseq-CNV=baseq.cnv:cli',
+            'baseq-BAM=baseq.bam:cli',
+            'baseq-SNV=baseq.snv._cmd:cli',
+            'baseq-RNA=baseq.rna._cmd:cli',
         ]
     }
 )

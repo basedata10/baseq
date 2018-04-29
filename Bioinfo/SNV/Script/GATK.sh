@@ -19,7 +19,7 @@ mkdir ./$sample
 cd ./$sample
 
 ##Check File1 Exists
-#basematic checkfq $fq1 $fq2
+#baseq checkfq $fq1 $fq2
 
 ##Bwa alignment
 bwa mem -t 20 -M -R "@RG\tID:$sample\tSM:$sample\tLB:WES\tPL:Illumina" $GENOME $fq1 $fq2 1>$sample.sam
@@ -49,16 +49,16 @@ $GATK SelectVariants -R $GENOME -V ${sample}_raw.snps.indels.vcf --select-type-t
 ##Annovar
 $path_annovar/convert2annovar.pl -format vcf4 ${sample}_raw_snps.vcf > ${sample}_snps.avinput
 $path_annovar/table_annovar.pl ${sample}_snps.avinput $ref_annovar -buildver hg38 -out ${sample} -remove -protocol refGene,genomicSuperDups,esp6500siv2_all,1000G2015aug_ALL,1000G2015aug_EAS,exac03,avsnp147,dbnsfp30a,clinvar_20170130,cosmic70,dbscsnv11,cytoBand -operation g,r,f,f,f,f,f,f,f,f,f,r -nastring . -csvout
-#basematic-SNV annovar --intype gatk --out ......
+#baseq-SNV annovar --intype gatk --out ......
 
 ##Filter VCFs
-#basematic-snp vcffilter --from annovar --type csv --file ${sample}.hg38_multianno.csv --out annovarfiles.txt
+#baseq-snp vcffilter --from annovar --type csv --file ${sample}.hg38_multianno.csv --out annovarfiles.txt
 
 ##Stats Result
-#basematic-bam stats --file ${sample}.bam --out annovarfiles.txt
+#baseq-bam stats --file ${sample}.bam --out annovarfiles.txt
 
 ##Build Result
-#basematic visualize --logfile ./logs.txt --out result.txt
+#baseq visualize --logfile ./logs.txt --out result.txt
 
 ##Remove Temp Files
 rm ${sample}.sam

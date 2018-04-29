@@ -80,6 +80,7 @@ compare_two_groups <- function(group1, group2){
 
 }
 
+
 for (x in 1:dim(df_comp)[1]){
     diff_genes = compare_two_groups(df_comp[x, 1], df_comp[x, 2])
     genes_up_path = paste(out_path, "/genes_up.", df_comp[x, 1], "_", df_comp[x, 2], ".txt", sep="")

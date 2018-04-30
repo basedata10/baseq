@@ -31,6 +31,22 @@ doc = """
 [to do]:
 #check tpm files, list their samples...
 
+[dropseq]
+    #barcode counting: Write the Barcode depth CSV to ./barcode_count.10X1.csv
+    baseq-RNA drops_barcode_counting -p 10X -n 10X1 -1 10X_1.1.fq.gz -d ./
+    baseq-RNA drops_barcode_counting -p indrop -n indrop_1 -1 inDrop_1.1.fq.gz -d ./
+    baseq-RNA drops_barcode_counting -p dropseq -n dropseq -1 DropSeq_1.1.fq.gz -d ./   (=>barcode_count.dropseq.csv)
+        
+    #barcode stats:
+    #generate barcode_stats file
+    #
+    baseq-RNA drops_barcode_stats -n 10X1 -p 10X --minreads 1000 -b ./barcode_count.10X1.csv 
+    baseq-RNA drops_barcode_stats -n indrop1 -p 10X --minreads 1000 -b ./barcode_count.indrop_1.csv 
+    baseq-RNA drops_barcode_stats -n dropseq1 -p 10X --minreads 1000 -b ./barcode_count.dropseq.csv
+    
+    #split barcode:
+    
+    
 """
 
 def print_doc():

@@ -1,11 +1,5 @@
 import click, sys
-from baseq.fastq.sample_file import check_sample_files
-
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-@click.group(context_settings=CONTEXT_SETTINGS)
-def cli():
-    click.echo("Welcome to baseq-RNA")
+from baseq.rna import cli
 
 @cli.command(short_help="Show the docs and examples ...")
 def doc():
@@ -71,22 +65,6 @@ def deseq2_result(groupfile, comparefile, outdir):
     print("[info] DESeq2 {}".format(outdir))
     pack_DeSeq2_result(groupfile, comparefile, outdir)
 
-@cli.command(short_help="inDrop/Drop-Seq/10X")
-@click.option('--genome', help="human/mouse/mixed")
-@click.option('--name', '-n', default='sample', help="sample name")
-@click.option('--fq1', '-1', default='', help='fastq1 path')
-@click.option('--fq2', '-2', default='', help='fastq2 path (optional)')
-@click.option('--dir', '-d', default='./', help='Folder of output (./)')
-def run_drops(name, fq1, fq2, genome, dir):
-    print('Start Processing inDrop Results')
-    samples = check_sample_files("", name, fq1, fq2)
-    if samples == []:
-        sys.exit("[error] No valid sample, Exit.")
-    from baseq.rna.dropseq.barcode import getBarcode
-    from baseq.rna.dropseq.barcode_stats import barcode_aggregate
-    getBarcode(fq1, "./barcode_count.csv", "10X", 20)
-    barcode_aggregate(barcode_count="./barcode_count.csv")
-
 @cli.command(short_help="plot tpm correlation figure between samples")
 @click.option('--name1', '-1', default='', help="sample name")
 @click.option('--name2', '-2', default='', help="sample name")
@@ -108,42 +86,3 @@ def corr_heatmap(table, name):
 #     from .salmon import Plot_corelation_fig
 #     Plot_corelation_fig(name1,name2, table)
 
-@cli.command(short_help="Genrate Excel....")
-def Excel():
-    import xlsxwriter
-
-    # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('demo.xlsx')
-
-    #Set default...
-    workbook.formats[0].set_font_size(12)
-    workbook.formats[0].set_font_name('arial')
-
-    worksheet = workbook.add_worksheet("Sheet1")
-
-    format_main = workbook.add_format({'bold': False, 'font_size':12, 'font_name':'arial'})
-    format_header = workbook.add_format({'bold': True, 'font_size':15, 'font_name':'arial'})
-
-    # Widen the first column to make the text clearer.
-    worksheet.set_column('A:A', 20)
-
-    # Write some simple text.
-    worksheet.write('A1', 'Hello')
-
-    # Text with formatting.
-    worksheet.write('A2', 'World', format_header)
-
-    # Write some numbers, with row/column notation.
-    worksheet.write(2, 0, "XXXX", format_main)
-    worksheet.write(3, 0, 123.456, format_main)
-    worksheet.write(3, 0, 12341234, format_main)
-
-    # Sheet 2...
-    worksheet2 = workbook.add_worksheet("Sheet2")
-    worksheet2.write('A2', 'World', format_header)
-    worksheet2.write(10, 10, 'World 10 10')
-
-    # Insert an image.
-    worksheet.insert_image('B5', 'logo.png')
-
-    workbook.close()

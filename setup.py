@@ -54,7 +54,7 @@ setup(
             'baseq-CNV=baseq.cnv:cli',
             'baseq-BAM=baseq.bam:cli',
             'baseq-SNV=baseq.snv._cmd:cli',
-            'baseq-RNA=baseq.rna._cmd:cli',
+            'baseq-RNA=baseq.rna:cli',
         ]
     }
 )

@@ -5,10 +5,11 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.group(context_settings=CONTEXT_SETTINGS)
 
 def cli():
-    import subprocess
-    cmd = 'eval "$(_baseq_COMPLETE=source baseq)"'
-    subprocess.call(cmd, shell=True)
-    click.echo("Welcome to baseq.")
+    #import subprocess
+    # cmd = 'eval "$(_baseq_COMPLETE=source baseq)"'
+    # subprocess.call(cmd, shell=True)
+    pass
+    #click.echo("")
 
 @cli.command(short_help = "Show the status of jobs")
 def init():
@@ -53,3 +54,9 @@ def serve(port):
 def notes(command):
     print("lsblk -f")
     print("mount /dev/sdb2 /mnt/path")
+
+@cli.command(short_help="tools for CSV files, run 'baseq csv' for help")
+@click.argument("command", nargs=-1)
+def csv(command):
+    from .utils.csvtools import csvtools
+    csvtools(command)

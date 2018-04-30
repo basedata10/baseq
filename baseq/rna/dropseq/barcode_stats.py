@@ -65,6 +65,8 @@ def barcode_aggregate(white_list="10X", protocol="", barcode_count="", max_cell=
     df["mismatch_reads"] = 0
     df["mismatch_bc"] = ""
     df["mutate_last_base"] = 0
+    df["total_reads"] = 0
+
     df = df.reset_index(drop=True)
     data = df.values.tolist() #matrix: barcode/reads/mismatch_reads
     bcs = [x[0] for x in data] #barcode names
@@ -92,22 +94,11 @@ def barcode_aggregate(white_list="10X", protocol="", barcode_count="", max_cell=
         df.iloc[id, 2] = sum(df_mis['counts'])
         df.iloc[id, 3] = "_".join(df_mis['barcode'])
         df.loc[index, "counts"] = 0
+        df.iloc[id, 5] = sum(df_mis['counts']) + df.iloc[id, 1]
 
     print("[info] Filtering the barcodes exceeds number {}".format(min_reads))
-    df = df.loc[df['counts'] >= min_reads]
+    df = df.loc[df['total_reads'] >= min_reads].sort_values("total_reads", ascending=False)
     df.to_csv(output, index=False)
-
-def getUMI(protocol, seq1, UMI_pos):
-    if protocol == "10X":
-        UMI = seq1[16:26]
-    if protocol == "dropseq":
-        if 1:
-            UMI = seq1[11:19]
-        else:
-            UMI = seq1[12:20]
-    if protocol == "indrop":
-        UMI = seq1[len(barcode) + 22:len(barcode) + 22 + 6]
-    return UMI
 
 # from baseq.rna.dropseq.barcode_counting import cut_seq_barcode
 # def barcode_split(fq1, fq2, barcode_info, protocol, outdir):

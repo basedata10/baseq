@@ -35,7 +35,6 @@ def run_hisat(sample_file, fq1, fq2, genome, outdir):
         run_hisat(fq1, fq2, genome, outdir)
 
 
-
 @cli.command(short_help="Aggregate TPM and Counts and QC Tables for multiple samples")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
 @click.option('--processdir', '-d', default='./', help="Combine all the TPMs under the folder")
@@ -44,6 +43,15 @@ def aggr_TPM_QC(processdir, sample_file, outpath):
     from .salmon import build_tpm_table
     print("[info] Aggregate TPM into {}".format(outpath))
     build_tpm_table(processdir, sample_file, outpath)
+
+@cli.command(short_help="Aggregate TPM and Counts and QC Tables for multiple samples")
+@click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
+@click.option('--processdir', '-d', default='./', help="Combine all the TPMs under the folder")
+@click.option('--outpath', '-o', default='./', help="Prefix of the TPM and Count file")
+def aggr_FPKM_QC(processdir, sample_file, outpath):
+    from .hisat import build_FPKM_table
+    print("[info] Aggregate FPKM into {}".format(outpath))
+    build_FPKM_table(processdir, sample_file, outpath)
 
 @cli.command(short_help="Run DESeq2")
 @click.option('--groupfile', '-g', default='', help="Tab seprated file: samplename, groups")

@@ -8,24 +8,24 @@ def run_build_hisat_index():
     pass
 
 script = """
-     cd {}
-    {} -x {} -1 {} -2 {} -p 8 -S hisat2_align.sam
-    {} view -b -u -S hisat2_align.sam > hisat2_align.bam
-    {} sort -@ 8 hisat2_align.bam -o hisat2_sorted.bam
-    {} index hisat2_sorted.bam
-    rm hisat_align.sam hisat2_align.bam
-    {} -o {} -p 8 -g {} hisat2_sorted.bam
-    """
+cd {0}
+{1} -x {2} -1 {3} -2 {4} -p 8 -S hisat2_align.sam
+{5} view -b -u -S hisat2_align.sam > hisat2_align.bam
+{5} sort -@ 8 hisat2_align.bam -o hisat2_sorted.bam
+{5} index hisat2_sorted.bam
+rm hisat2_align.sam hisat2_align.bam
+{6} -o {0} -p 8 -G {7} hisat2_sorted.bam
+"""
 script1 = """
-     cd {}
-    {} -x {} -U {} -p 8 -S hisat2_align.sam
-    {} view -b -u -S hisat2_align.sam > hisat2_align.bam
-    {} sort -@ 8 hisat2_align.bam -o hisat2_sorted.bam
-    {} index hisat2_sorted.bam
-    rm hisat_align.sam hisat2_align.bam
-    {} -o {} -p 8 -g {} hisat2_sorted.bam
-    """
-def run_hisat(fq1, fq2, genome, outdir):
+cd {0}
+{1} -x {2} -U {3} -p 8 -S hisat2_align.sam
+{4} view -b -u -S hisat2_align.sam > hisat2_align.bam
+{4} sort -@ 8 hisat2_align.bam -o hisat2_sorted.bam
+{4} index hisat2_sorted.bam
+rm hisat2_align.sam hisat2_align.bam
+{5} -o {0} -p 8 -G {6} hisat2_sorted.bam
+"""
+def run_hisat(fq1, fq2, genome, outdir, run=True):
     print(fq1, fq2, genome, outdir)
     hisat = get_config("RNA", "hisat")
     samtools = get_config("RNA", "samtools")
@@ -39,25 +39,15 @@ def run_hisat(fq1, fq2, genome, outdir):
         os.mkdir(outdir)
         print("[info] Create outdir in: {}".format(outdir))
     if fq1 and fq2 and os.path.exists(fq1) and os.path.exists(fq2):
-        hisat_pipe_cmd = script.format(outdir,
-               hisat, hisat_ref, fq1, fq2,
-               samtools,
-               samtools,
-               samtools,
-               cufflinks,outdir,cufflinks_anno)
+        hisat_pipe_cmd = script.format(outdir, hisat, hisat_ref, fq1, fq2, samtools, cufflinks, cufflinks_anno)
 
     elif fq1 and os.path.exists(fq1):
-        hisat_pipe_cmd = script1.format(outdir,
-               hisat, hisat_ref, fq1,
-               samtools,
-               samtools,
-               samtools,
-               cufflinks,outdir,cufflinks_anno)
-
+        hisat_pipe_cmd = script1.format(outdir, hisat, hisat_ref, fq1, samtools, cufflinks,cufflinks_anno)
     else:
         pass
-    run_cmd("hisat and cufflinks analysis"," ".join(hisat_pipe_cmd))
-
+    if run:
+        run_cmd("hisat and cufflinks analysis","".join(hisat_pipe_cmd))
+    return hisat_pipe_cmd
 
 def run_multiple_hisat(path, genome, outdir):
     samples = check_sample_files(path)
@@ -67,26 +57,32 @@ def run_multiple_hisat(path, genome, outdir):
         print("[info] Create outdir in: {}".format(outdir))
     script_lists = []
     script_main_path = os.path.join(outdir, "work.sh")
+    qsub_main_path = os.path.join(outdir, "qsub_work.sh")
     for sample in samples:
         name = sample[0]
         path = os.path.join(outdir, name)
         script_path = os.path.join(path, "work.sh")
+
         if not os.path.exists(path):
             os.mkdir(path)
             print("[info] Create outdir for sample {} in: {}".format(name, path))
         else:
             print("[info] Outdir for sample {} exists in: {}".format(name, path))
         if sample[2]:
-            script = "baseq-RNA run_hisat -g {} -1 {} -2 {} -d {}".format(genome, sample[1], sample[2], path)
+            #script_cmd = "baseq-RNA run_hisat -g {} -1 {} -2 {} -d {}".format(genome, sample[1], sample[2], path)
+            script_cmd = run_hisat(sample[1],sample[2],genome,path, False)
         else:
-            script = "baseq-RNA run_hisat -g {} -1 {} -d {}".format(genome, sample[1],path)
+            #script_cmd = "baseq-RNA run_hisat -g {} -1 {} -d {}".format(genome, sample[1],path)
+            script_cmd = run_hisat(sample[1],genome,path, False)
         with open(script_path, "w") as file:
-            file.writelines(script+"\n")
+            file.writelines("#!bin/bash"+"\n"+script_cmd+"\n")
             print("[info] work script written in {}".format(script_path))
         script_lists.append(script_path)
     #write the main script
     with open(script_main_path, "w") as file:
         file.writelines("\n".join(["bash " + x for x in script_lists]))
+    with open(qsub_main_path, "w") as file:
+        file.writelines("\n".join(["qsub -cwd -l vf=8g,p=8 " + x for x in script_lists]))
     print("[info] Main script written in {}".format(script_main_path))
 
 

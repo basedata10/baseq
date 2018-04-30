@@ -25,6 +25,7 @@ cd {0}
 rm hisat2_align.sam hisat2_align.bam
 {5} -o {0} -p 8 -G {6} hisat2_sorted.bam
 """
+
 def run_hisat(fq1, fq2, genome, outdir, run=True):
     print(fq1, fq2, genome, outdir)
     hisat = get_config("RNA", "hisat")

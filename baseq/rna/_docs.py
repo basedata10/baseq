@@ -1,5 +1,5 @@
 doc = """
-[Steps]
+[Salmon]
     #Single sample:
     baseq-RNA run_salmon -1 HMC_01.1.fq.gz -2 HMC_01.2.fq.gz -g hg38
     #Multiple samples:
@@ -7,12 +7,16 @@ doc = """
     #Aggregate: TPM Counts and QC...
     baseq-RNA aggr_tpm_qc -m samples.txt -d ./salmon_process -o ./salmon
     
-    #HISAT2 Pipeline [to do...]
+[hisat+cufflinks]
+    baseq-RNA run_hisat -m samples.txt -g hg38 -d ./hisat
     baseq-RNA run_hisat2 -1 HMC_01.1.fq.gz -2 HMC_01.2.fq.gz -g hg38
+
+[star+featurecounts]
     baseq-RNA run_star -1 HMC_01.1.fq.gz -2 HMC_01.2.fq.gz -g hg38
     baseq-RNA run_featurecount -1 HMC_01.1.fq.gz -2 HMC_01.2.fq.gz -g hg38
     baseq-RNA run_cufflinks -1 HMC_01.1.fq.gz -2 HMC_01.2.fq.gz -g hg38
-    
+
+[visualization]    
     #scatter plot...
     baseq-RNA plot_corelation_scatter -1 sample03 -2 sample02 -t ./exptpm.txt
     

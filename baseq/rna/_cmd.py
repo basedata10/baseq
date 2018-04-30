@@ -15,10 +15,10 @@ def doc():
 #Run the CNV pipeline for Lists of Samples
 @cli.command(short_help="salmon quatification")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
-@click.option('--genome', '-g', default='hg19', help="Species hg19 or mm10/mm38")
+@click.option('--genome', '-g', default='hg38', help="Species hg19 or mm10/mm38")
 @click.option('--fq1', '-1', default='', help="Fastq 1")
 @click.option('--fq2', '-2', default='', help="Fastq 2")
-@click.option('--outdir', '-d', default='./process_salmon', help="The scripts and output path")
+@click.option('--outdir', '-d', default='', help="The scripts and output path")
 def run_salmon(sample_file, fq1, fq2, genome, outdir):
     from .salmon import run_salmon, run_multiple_salmons
     if sample_file:
@@ -29,7 +29,7 @@ def run_salmon(sample_file, fq1, fq2, genome, outdir):
 #run hisat, samtools and cufflinks
 @cli.command(short_help="hisat alignment and cufflinks quatification")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
-@click.option('--genome', '-g', default='hg19', help="Species hg19 or mm10/mm38")
+@click.option('--genome', '-g', default='hg38', help="Species hg19 or mm10/mm38")
 @click.option('--fq1', '-1', default='', help="Fastq 1")
 @click.option('--fq2', '-2', default='', help="Fastq 2")
 @click.option('--outdir', '-d', default='', help="The scripts and output path")

@@ -11,6 +11,7 @@ def run_build_salmon_index():
 def run_salmon(fq1, fq2, genome, outdir):
     print(fq1, fq2, genome, outdir)
     salmon = get_config("RNA", "salmon")
+    print(salmon)
     salmon_ref = get_config("RNA_ref_"+genome, "salmon_index")
     gene_map = get_config("RNA_ref_"+genome, "gene_map")
 
@@ -20,7 +21,7 @@ def run_salmon(fq1, fq2, genome, outdir):
     elif fq1 and os.path.exists(fq1):
         salmon_cmd = [salmon, 'quant', '-i', salmon_ref, '-l A', '-r', fq1, '-p 8', '-g', gene_map, '-o', outdir]
     else:
-        pass
+        sys.exit("[error]")
 
     run_cmd("Salmon Quantification", " ".join(salmon_cmd))
 

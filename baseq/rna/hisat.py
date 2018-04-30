@@ -73,7 +73,7 @@ def run_multiple_hisat(path, genome, outdir):
             script_cmd = run_hisat(sample[1],sample[2],genome,path, False)
         else:
             #script_cmd = "baseq-RNA run_hisat -g {} -1 {} -d {}".format(genome, sample[1],path)
-            script_cmd = run_hisat(sample[1],genome,path, False)
+            script_cmd = run_hisat(sample[1],"",genome,path, False)
         with open(script_path, "w") as file:
             file.writelines("#!/bin/bash"+"\n"+script_cmd+"\n")
             print("[info] work script written in {}".format(script_path))

@@ -14,7 +14,7 @@ cd {0}
 {5} sort -@ 8 hisat2_align.bam -o hisat2_sorted.bam
 {5} index hisat2_sorted.bam
 rm hisat2_align.sam hisat2_align.bam
-{6} -o {0} -p 8 -G {7} hisat2_sorted.bam
+{6} -q -o ./ -p 8 -G {7} hisat2_sorted.bam
 """
 script1 = """
 cd {0}
@@ -23,7 +23,7 @@ cd {0}
 {4} sort -@ 8 hisat2_align.bam -o hisat2_sorted.bam
 {4} index hisat2_sorted.bam
 rm hisat2_align.sam hisat2_align.bam
-{5} -o {0} -p 8 -G {6} hisat2_sorted.bam
+{5} -q -o ./ -p 8 -G {6} hisat2_sorted.bam
 """
 def run_hisat(fq1, fq2, genome, outdir, run=True):
     print(fq1, fq2, genome, outdir)
@@ -75,7 +75,7 @@ def run_multiple_hisat(path, genome, outdir):
             #script_cmd = "baseq-RNA run_hisat -g {} -1 {} -d {}".format(genome, sample[1],path)
             script_cmd = run_hisat(sample[1],genome,path, False)
         with open(script_path, "w") as file:
-            file.writelines("#!bin/bash"+"\n"+script_cmd+"\n")
+            file.writelines("#!/bin/bash"+"\n"+script_cmd+"\n")
             print("[info] work script written in {}".format(script_path))
         script_lists.append(script_path)
     #write the main script

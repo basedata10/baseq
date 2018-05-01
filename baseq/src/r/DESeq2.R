@@ -14,6 +14,7 @@ out_path = args[5]
 df_sample_groups = read.table(group_file,header=TRUE,row.names = 1)
 samples = make.names(rownames(df_sample_groups))
 rownames(df_sample_groups) = samples
+print(df_sample_groups)
 
 #Read Group Comparation File...
 df_comp = read.table(group_compare_file,header=TRUE, stringsAsFactors =FALSE)
@@ -45,7 +46,8 @@ vsd_data <- vst(dds,blind = FALSE)
 pcaData <- plotPCA(vsd_data, intgroup = "groups", returnData=TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
 
-figurefile = "./PCA.png"
+
+figurefile = paste(out_path, "/PCA.png", sep="")
 CairoPNG(figurefile, width=700, height=600)
 
 p2 = ggplot(pcaData, aes(PC1, PC2, color=group)) +
@@ -91,7 +93,3 @@ for (x in 1:dim(df_comp)[1]){
     write.table(diff_genes[[1]], genes_up_path)
     write.table(diff_genes[[2]], genes_down_path)
 }
-
-diff_genes = compare_two_groups("C1T1", "C1T2")
-diff_genes = compare_two_groups("C1T1", "C1T3")
-diff_genes = compare_two_groups("C1T2", "C1T3")

@@ -53,5 +53,31 @@ def drops_barcode_stats(name, protocol, bcfile, minreads, dir):
 @click.option('--minreads', default=2000, help='Minimum reads for a barcode')
 @click.option('--maxcell', default=10000, help='Max cell number')
 @click.option('--dir', '-d', default='./', help='Folder of output (./)')
-def drops_barcode_splits(name, protocol, bcfile, minreads, dir):
-    print('Start Processing inDrop Results')
+def drops_barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir):
+    from baseq.rna.dropseq.barcode_splits import barcode_split
+    print('Split the cell barcodes ...')
+    barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir)
+
+@cli.command(short_help="Split Barcode")
+@click.option('--name', '-n', default='sample', help="sample name")
+@click.option('--genome', '-g', default='hg38', help="hg38/hg19/")
+@click.option('--bcdir', '-d', default='./', help='Folder of barcodes')
+@click.option('--dir', '-o', default='./', help='Folder of output (./)')
+def drops_star_align_script(name, bcdir, genome, dir):
+    from baseq.rna.dropseq.run_star import genrate_star_script
+    print('Split the cell barcodes ...')
+    genrate_star_script(bcdir, genome, "qsub", dir)
+
+@cli.command(short_help="Split Barcode")
+@click.option('--name', '-n', default='sample', help="sample name")
+@click.option('--bampath', '-b', help='Path to the bam file')
+@click.option('--barcode_prefix', '-1', default='', help='Barcode prefix...')
+@click.option('--dir', '-d', default='./', help='Folder of output (./)')
+def drops_reads_tagging(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir):
+    from baseq.rna.dropseq.barcode_splits import barcode_split
+    print('Split the cell barcodes ...')
+    barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir)
+
+
+
+

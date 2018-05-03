@@ -4,7 +4,6 @@ from baseq.mgt import get_config, run_cmd
 
 def bin_counting(genome, bamfile, out):
 
-    import pandas as pd
     import bisect
     from .files import dynamicbin_reader
 
@@ -47,8 +46,6 @@ def bin_counting(genome, bamfile, out):
         quality = int(infos[4])
         if quality<40:
             continue
-        # if re.search("XS:i", data):
-        #     continue
 
         #Counting reads to bins
         chr = infos[2]
@@ -62,7 +59,7 @@ def bin_counting(genome, bamfile, out):
             idx = chr_bin_idx[chr][idx_chr]
             counts[idx] += 1
 
-    #print
     df_dynamicbin["counts"] = counts
     print("[info] Save the bin count file to {}".format(out))
+    # save the count file ...
     df_dynamicbin['counts'].to_csv(out, header=True, sep="\t")

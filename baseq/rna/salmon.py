@@ -22,47 +22,52 @@ def run_salmon(fq1, fq2, genome, outdir):
         salmon_cmd = [salmon, 'quant', '-i', salmon_ref, '-l A', '-r', fq1, '-p 8', '-g', gene_map, '-o', outdir]
     else:
         sys.exit("[error]")
-
     run_cmd("Salmon Quantification", " ".join(salmon_cmd))
+    return salmon_cmd
 
-def run_multiple_salmons(path, genome, outdir):
+def run_multiple_salmons(path, genome, outdir, workmode, parallel):
     samples = check_sample_files(path)
-    print(samples)
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-        print("[info] Create outdir in: {}".format(outdir))
     script_lists = []
     script_main_path = os.path.join(outdir, "work.sh")
+    if workmode == "local":
+        from concurrent.futures import ThreadPoolExecutor
+        pool = ThreadPoolExecutor(int(parallel))
+        print("[info] Thread Pool with {}".format(parallel))
+
     for sample in samples:
         name = sample[0]
         path = os.path.join(outdir, name)
         script_path = os.path.join(path, "work.sh")
         if not os.path.exists(path):
             os.mkdir(path)
-            print("[info] Create outdir for sample {} in: {}".format(name, path))
-        else:
-            print("[info] Outdir for sample {} exists in: {}".format(name, path))
         if sample[2]:
             script = "baseq-RNA run_salmon -1 {} -2 {} -g {} -d {}".format(sample[1], sample[2], genome, path)
         else:
             script = "baseq-RNA run_salmon -1 {} -g {} -d {}".format(sample[1], genome, path)
-        with open(script_path, "w") as file:
-            file.writelines(script+"\n")
-            print("[info] work script written in {}".format(script_path))
-        script_lists.append(script_path)
-    #write the main script
-    with open(script_main_path, "w") as file:
-        file.writelines("\n".join(["bash " + x for x in script_lists]))
-    print("[info] Main script written in {}".format(script_main_path))
+        if workmode == "local":
+            pool.submit(run_cmd, "Salmon", script)
+        else:
+            with open(script_path, "w") as file:
+                file.writelines(script+"\n")
+                print("[info] work script written in {}".format(script_path))
+            script_lists.append(script_path)
 
+    #write the main script
+    if not workmode == "local":
+        with open(script_main_path, "w") as file:
+            file.writelines("\n".join(["bash " + x for x in script_lists]))
+        print("[info] Main script written in {}".format(script_main_path))
 
 # Build TPM and QC ...
-def build_tpm_table(processdir, samplefile, outpath):
+def build_tpm_table(processdir, samplefile, name):
     samples = check_sample_files(samplefile)
     sample_names = [sample[0] for sample in samples]
-    tpm_file_path = outpath + "tpm.txt"
-    count_file_path = outpath + "count.txt"
-    qc_file_path = outpath + "qc.txt"
+    tpm_file_path = "TPM.{}.txt".format(name)
+    count_file_path = "Count.{}.txt".format(name)
+    qc_file_path = "QC.{}.txt".format(name)
+    print("[info] The files will write to : {}".format(tpm_file_path, count_file_path, qc_file_path))
     tpm = {}
     count = {}
     qc = ["\t".join(['sample', 'reads', 'mapped', 'ratio', 'genecounts'])]

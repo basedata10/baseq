@@ -23,13 +23,12 @@ def cut_seq_barcode(protocol, seq):
                     break
         return ""
 
-def count_barcodes(path, output, protocol, min_reads):
+def count_barcodes(path, output, protocol, min_reads, topreads=100):
     bc_counts = {}
     index = 0
-    print("[info] Process the top 10M reads in {}".format(path))
-    print("[info] The Method is : {}".format(protocol))
-    print("[info] Barcode with less {} reads is discard".format(min_reads))
-    lines = read_file_by_lines(path, 10 * 1000 * 1000, 4)
+    print("[info] Process the top {}M reads in {}".format(topreads, path))
+    print("[info] Barcode with less than {} reads is discard".format(min_reads))
+    lines = read_file_by_lines(path, topreads * 1000 * 1000, 4)
     for line in lines:
         index += 1
         bc = cut_seq_barcode(protocol, line[1])
@@ -39,14 +38,14 @@ def count_barcodes(path, output, protocol, min_reads):
             bc_counts[bc] += 1
         else:
             bc_counts[bc] = 1
-        if index % 1000000 == 1:
-            print("[info] Processed {} lines".format(index-1))
+        if index % 1000000 == 0:
+            print("\r[info] Processed {}M lines".format(index/1000000))
 
     bc_counts_filter = []
     for k, v in bc_counts.items():
         if v >= min_reads:
             bc_counts_filter.append([k, v])
 
-    print("[info] Write the Barcode depth CSV to {}".format(output))
+    print("[info] Barcode depth file: {}".format(output))
     df = pd.DataFrame(bc_counts_filter, columns=["barcode", "counts"])
     df.to_csv(output, sep=",", index=False)

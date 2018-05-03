@@ -86,15 +86,20 @@ def split_barcode(barcode, fastq, outprefix, suffix):
     from .split_barcode import split_barcode
     split_barcode(barcode, fastq, outprefix, suffix)
 
-
 @cli.command(short_help="Split the fastq into diffrent barcodes")
 @click.option('--samplefile', '-m', default='', help='sample file lists')
+@click.option('--thread', '-t', default=8, help='sample file lists')
+@click.option('--name', '-s', default='sample', help='')
+@click.option('--seqfile', default='', help='')
 @click.option('--fq1', '-1', default='', help='fastq1')
 @click.option('--fq2', '-2', default='', help='fastq2')
-@click.option('--out', '-o', default='./qc.txt', help='file path (./qc.txt)')
-@click.argument("outname")
-def filter_polyAT(fastq1, fastq2, outname):
-    print("[info] Filter the Reads...")
-    from .trim_fastq import filter_polyAT
-
-    filter_polyAT(fastq1, fastq2, outname)
+def filter_polyAT(samplefile, seqfile, fq1, fq2, name, thread):
+    print("[info] Filter the Reads with polyA/polyT...")
+    from .trim_fastq import filter_fastq_pair_by_sequence
+    from baseq.fastq.sample_file import check_sample_files
+    samples = check_sample_files(samplefile, fq1, fq2)
+    from concurrent.futures import ThreadPoolExecutor
+    pool = ThreadPoolExecutor(int(thread))
+    print("[info] Using the Multiple Threads: {}".format(thread))
+    for sample in samples:
+        pool.submit(filter_fastq_pair_by_sequence, sample[1], sample[2], seqfile, sample[0])

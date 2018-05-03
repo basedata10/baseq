@@ -13,6 +13,7 @@ def pca_analysis(expTable, groupfile):
     """
     #read groupfile
     groups = pd.read_table(groupfile, sep=" ")
+    print("[info] Groups lists ...")
     print(groups)
     samples = groups["sample"]
 
@@ -30,11 +31,10 @@ def pca_analysis(expTable, groupfile):
 
 def pca_score_power(exp_table, samplegroup, group_pairs, qcfile):
     """
-    For each group pair, generate the pvalue for the PC1 and PC2...
+    For each group pair, do the PCA analysis between them...
     """
-    #prepare Expression files...
+    #prepare Expression files ...
     df_exp = pd.read_table(exp_table, index_col=0)
-
     df_sample = pd.read_table(samplegroup, sep='\s+')
     df_compare = pd.read_table(group_pairs, sep='\s+')
     df_qc = pd.read_table(qcfile, sep="\s+", index_col="sample")
@@ -48,12 +48,12 @@ def pca_score_power(exp_table, samplegroup, group_pairs, qcfile):
         pca = PCA(n_components=2)
         pca_result = pca.fit_transform(df.transpose())
         pca_df = pd.DataFrame(data=pca_result, columns=['PC1', 'PC2'], index=samples1+samples2)
+
         #QC
         qcs = df_qc.loc[samples1+samples2]
-        tt = pd.concat([qcs, pca_df], axis=1)
         corr = pca_df['PC1'].corr(qcs['ratio'])
         corr2 = pca_df['PC2'].corr(qcs['ratio'])
-        print("##", corr, corr2)
+        print("PC1, PC2 Vs Ratio Correlation", corr, corr2)
 
 def pca_score_exploration():
     pass

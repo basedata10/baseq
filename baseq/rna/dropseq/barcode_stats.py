@@ -13,95 +13,59 @@ def mutate_single_base(seq):
                 mutated.append(''.join(temp))
     return mutated
 
-def rev_comp(seq):
-    ___tbl = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C', 'N': 'N'}
-    return ''.join(___tbl[s] for s in seq[::-1])
-
-class WhiteListCheck:
-    def __init__(self, protocol, white_list):
-        if protocol == "10X":
-            bc_white = [set()]
-            with open(white_list, 'r') as infile:
-                for line in infile:
-                    bc_white[0].add(line.strip())
-
-        if protocol == "indrop":
-            bc_white = [set(), set()]
-            with open(white_list, 'r') as infile:
-                for line in infile:
-                    bc_rev = rev_comp(line.strip())
-                    bc_white[0].add(bc_rev)
-
-            with open(white_list, 'r') as infile:
-                for line in infile:
-                    bc_rev = rev_comp(line.strip())
-                    bc_white[1].add(bc_rev)
-
-        if protocol == "dropseq":
-            bc_white = []
-        self.protocol = protocol
-        self.bc_white = bc_white
-
-    def check(self, barcode):
-        if self.protocol == "10X":
-            if barcode in self.bc_white[0]:
-                return 1
-            else:
-                return 0
-        if self.protocol == "dropseq":
-            if barcode in ['TCAAAAGCAGTG']:
-                return 0
-            else:
-                return 1
-        if self.protocol == "indrop":
-            if barcode[0:-8] in self.bc_white[0] and barcode[-8:] in self.bc_white[1]:
-                return 1
-            else:
-                return 0
-
-def barcode_aggregate(white_list="10X", protocol="", barcode_count="", max_cell=20000, min_reads=2000, output="./bc_stats.txt"):
+def barcode_correct_filter(protocol="", barcode_count="", max_cell=10000, min_reads=2000, output="./bc_stats.txt"):
+    """
+    Aggregate the mismatch barcode, get the total_reads;
+    Determine whether the last base mutates;
+    Filter by whitelist;
+    Filter by read counts;
+    """
     print("[info] Stats the barcodes counts in {}".format(barcode_count))
-    df = pd.read_csv(barcode_count).sort_values("counts", ascending=False)
+    df = pd.read_csv(barcode_count, index_col=0).sort_values("counts", ascending=False)
     df["mismatch_reads"] = 0
     df["mismatch_bc"] = ""
     df["mutate_last_base"] = 0
     df["total_reads"] = 0
+    df["whitelist"] = 1
 
-    df = df.reset_index(drop=True)
-    data = df.values.tolist() #matrix: barcode/reads/mismatch_reads
-    bcs = [x[0] for x in data] #barcode names
     #Aggregate by 1 Mismatch
-    bc_counts = len(df.index)
-    for id in range(0, bc_counts):
-        bc = df.iloc[id, 0]
-        count = df.iloc[id, 1]
-        print(bc, df.iloc[id, 1])
-
-        if df.iloc[id, 1] == 0 or count <= 0.25 * min_reads:
+    for bc in df.index.tolist():
+        count = df.loc[bc, 'counts']
+        if count == 0 or count <= 0.25 * min_reads:
             continue
 
         bc_mis = mutate_single_base(bc)
 
         #index for these mismatches
-        index = df['barcode'].isin(bc_mis)
+        index = df.index.isin(bc_mis)
         df_mis = df.loc[index].sort_values("counts", ascending=False)
-        barcode_mis = df_mis['barcode'].tolist()
+        barcode_mis = df_mis.index.tolist()
 
         #determine if mutate in the last base
         if len(barcode_mis)>=3 and sum([1 for x in barcode_mis[0:3] if x[0:-1]==bc[0:-1]])==3:
-            df.iloc[id, 4] = 1
+            df.loc[bc, 'mutate_last_base'] = 1
 
-        df.iloc[id, 2] = sum(df_mis['counts'])
-        df.iloc[id, 3] = "_".join(df_mis['barcode'])
+        df.loc[bc, 'mismatch_reads'] = sum(df_mis['counts'])
+        df.loc[bc, 'mismatch_bc'] = "_".join(df_mis.index.tolist())
+        df.loc[bc, 'total_reads'] = sum(df_mis['counts']) + df.loc[bc, 'counts']
         df.loc[index, "counts"] = 0
-        df.iloc[id, 5] = sum(df_mis['counts']) + df.iloc[id, 1]
 
+    #Filter by whitelist
+    from baseq.rna.dropseq.whitelist import read_whitelist, whitelist_check
+    bc_white = read_whitelist(protocol)
+    for index, row in df.iterrows():
+        valid = whitelist_check(bc_white, protocol, index)
+        df.loc[index, 'whitelist'] = valid
+
+    df_white = df[df['whitelist']==1]
+
+    #filter by read counts
     print("[info] Filtering the barcodes exceeds number {}".format(min_reads))
-    df = df.loc[df['total_reads'] >= min_reads].sort_values("total_reads", ascending=False)
-    df.to_csv(output, index=False)
+    df_white_reads = df_white.loc[df_white['total_reads'] >= min_reads].sort_values("total_reads", ascending=False)
 
-# from baseq.rna.dropseq.barcode_counting import cut_seq_barcode
-# def barcode_split(fq1, fq2, barcode_info, protocol, outdir):
-#     read1 = read_file_by_lines(fq1, 10 * 1000 * 1000, 4)
-#     read2 = read_file_by_lines(fq2, 10 * 1000 * 1000, 4)
-#     bc = cut_seq_barcode(read1[1])
+    #Print informations ...
+    print("[info] Raw CBs count {} ==> Whitelist CBs {} ==> Abundent CBs {}".format(len(df.index), len(df_white.index), len(df_white_reads.index)))
+    print("[info] Raw Reads {} ==> Whitelist Reads {} ==> Abundent Reads {}".format(sum(df['total_reads']), sum(df_white['total_reads']),
+                                                                                    sum(df_white_reads['total_reads'])))
+    print("[info] The stats file write to: {}".format(output))
+    df_white_reads.to_csv(output)

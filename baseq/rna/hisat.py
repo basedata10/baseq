@@ -87,13 +87,13 @@ def run_multiple_hisat(path, genome, outdir):
 def build_FPKM_table(processdir, samplefile, outpath):
     samples = check_sample_files(samplefile)
     sample_names = [sample[0] for sample in samples]
+    sample_num = len(sample_names)
     tpm_file_path = outpath + "fpkm.txt"
     qc_file_path = outpath + "qc.txt"
     tpm = {}
     qc = ["\t".join(['sample', 'reads', 'mapped', 'ratio', 'genecounts'])]
-    for sample in sample_names:
-        #build TPM table
-        sample_TPM = []
+    for idx, sample in enumerate(sample_names):
+        sample_TPM = [] #sample all genes' fpkm value...
         salmon_gene_path = os.path.join(processdir, sample, 'genes.fpkm_tracking')
         if not os.path.exists(salmon_gene_path):
             print("[info] File not exists for {}".format(sample))
@@ -103,12 +103,12 @@ def build_FPKM_table(processdir, samplefile, outpath):
             for line in infile:
                 infos = re.split("\t", line)
                 gene = infos[4]
-                print(gene, float(infos[9]))
                 sample_TPM.append(float(infos[9]))
                 if not gene in tpm:
-                    tpm[gene] = [float(infos[9])]
+                    tpm[gene] = [0]*sample_num
+                    tpm[gene][idx] = float(infos[9])
                 else:
-                    tpm[gene].append(float(infos[9]))
+                    tpm[gene][idx] = float(infos[9])
 
         #Genes Detected
         genes_TPM_1 = sum([1 for x in sample_TPM if x>=1])

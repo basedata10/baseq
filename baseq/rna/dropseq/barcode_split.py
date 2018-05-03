@@ -1,13 +1,13 @@
 import os, sys
 import pandas as pd
 import numpy as np
+import time
 from baseq.utils.file_reader import read_file_by_lines
-from baseq.rna.dropseq.barcode_counting import cut_seq_barcode
+from baseq.rna.dropseq.barcode_count import cut_seq_barcode
 
 from itertools import product
 barcode_prefix = [x[0]+x[1] for x in list(product('ATCG', repeat=2))]
 
-#build 16 files
 def open_splited_files(dir, name):
     files = {}
     buffers = {}
@@ -19,12 +19,9 @@ def open_splited_files(dir, name):
 
     for barcode in barcode_prefix:
         path = os.path.join(dir, "split.{}.{}.fq".format(name, barcode))
-        files[barcode] = open(path, 'wt')
+        files[barcode] = open(path, 'w')
         buffers[barcode] = []
     return (files, buffers)
-
-def write_buffers():
-    pass
 
 def getUMI(protocol, barcode, seq1, mutate_last_base):
     if protocol == "10X":
@@ -38,11 +35,14 @@ def getUMI(protocol, barcode, seq1, mutate_last_base):
         UMI = seq1[len(barcode) + 22:len(barcode) + 22 + 6]
     return UMI
 
-def barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir):
+def barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir, topreads=10):
     #barcode infos
     barcode_corrected = {}
     barcode_mutate_last = []
+
     #read barcode stats...
+    #build barcode correction table...
+    #build barcode_mutate_last list...
     bc_stats = pd.read_csv(bcstats)
     bc_stats = bc_stats.replace(np.nan, '', regex=True)
     for index, row in bc_stats.iterrows():
@@ -55,17 +55,25 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir):
             barcode_mis = row['mismatch_bc'].split("_")
             for bc in barcode_mis:
                 barcode_corrected[bc] = barcode
-    print(barcode_corrected)
-    files, buffers = open_splited_files(dir, name)
 
-    fq1 = read_file_by_lines(fq1, 1 * 1000 * 1000, 4)
-    fq2 = read_file_by_lines(fq2, 1 * 1000 * 1000, 4)
+    files, buffers = open_splited_files(dir, name)
+    fq1 = read_file_by_lines(fq1, topreads * 1000 * 1000, 4)
+    fq2 = read_file_by_lines(fq2, topreads * 1000 * 1000, 4)
+
     counter = 0
+
     for read1 in fq1:
         read2 = next(fq2)
         seq1 = read1[1]
-
         counter += 1
+        if counter % 1000000 == 0:
+            print("[info] Processed {}M reads".format(counter / 1000000))
+
+        if counter % 100000 == 0:
+            for key in buffers:
+                files[key].writelines("\n".join(buffers[key])+"\n")
+                buffers[key] = []
+
         bc = cut_seq_barcode(protocol, read1[1])
         if bc in barcode_corrected:
             bc_corrected = barcode_corrected[bc]
@@ -86,14 +94,7 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir):
         header = "_".join(['@', bc_corrected, UMI, str(counter)])
         seq = read2[1].strip()
         quality = read2[3].strip()
-
         buffers[bc_prefix].append("\n".join([header, seq, "+", quality]))
-
-        if counter % 100000 ==1:
-            print("[info] Processed 10K reads")
-            for key in buffers:
-                files[key].writelines("\n".join(buffers[key]))
-                buffers[key] = []
 
     for key in buffers:
         files[key].writelines("\n".join(buffers[key]))

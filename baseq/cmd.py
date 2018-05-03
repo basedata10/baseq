@@ -38,7 +38,7 @@ def looker(name, port):
     click.echo('Start Using CNV Analysis')
 
 @cli.command(short_help="Show the status of jobs")
-@click.option('--port', '-p', default='./', help='port')
+@click.option('--port', '-p', default='8787', help='port (8787)')
 def serve(port):
     import sys, subprocess
     import socket
@@ -54,6 +54,11 @@ def serve(port):
 def notes(command):
     print("lsblk -f")
     print("mount /dev/sdb2 /mnt/path")
+
+@cli.command(short_help="Deploy the package to mnt path...")
+@click.argument("command", nargs=-1)
+def deploy(command):
+    print("[info] Deploy the packages to the mnt server...")
 
 @cli.command(short_help="tools for CSV files, run 'baseq csv' for help")
 @click.argument("command", nargs=-1)

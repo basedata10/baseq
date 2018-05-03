@@ -22,10 +22,10 @@ def check_sample_files(samplefile="", name="", fq1="", fq2=""):
                     fq2 = ""
                 if fq1 and os.path.exists(fq1):
                     if fq2 and os.path.exists(fq2):
-                        print("[info] '{}' is Paired End Sample, fq1: '{}' fq2:'{}'".format(sample, fq1, fq2))
+                        #print("[info] '{}' is Paired End Sample, fq1: '{}' fq2:'{}'".format(sample, fq1, fq2))
                         samples.append([sample, os.path.abspath(fq1), os.path.abspath(fq2)])
                     else:
-                        print("[info] '{}' is Single End Sample, fq1: '{}'".format(sample, fq1))
+                        #print("[info] '{}' is Single End Sample, fq1: '{}'".format(sample, fq1))
                         samples.append([sample, os.path.abspath(fq1), ''])
                 else:
                     print("[Exit] No valid file for {}".format(sample))

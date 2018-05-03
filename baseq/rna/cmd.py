@@ -3,20 +3,22 @@ from baseq.rna import cli
 
 @cli.command(short_help="Show the docs and examples ...")
 def doc():
-    from ._docs import print_doc
+    from .docs import print_doc
     print_doc()
 
 #Run the CNV pipeline for Lists of Samples
 @cli.command(short_help="salmon quatification")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
 @click.option('--genome', '-g', default='hg38', help="Species hg19 or mm10/mm38")
+@click.option('--workmode', '-w', default='local', help="qsub/local")
+@click.option('--parallel', '-p', default='2', help="How many runs at the same time...")
 @click.option('--fq1', '-1', default='', help="Fastq 1")
 @click.option('--fq2', '-2', default='', help="Fastq 2")
 @click.option('--outdir', '-d', default='', help="The scripts and output path")
-def run_salmon(sample_file, fq1, fq2, genome, outdir):
+def run_salmon(sample_file, fq1, fq2, genome, outdir, workmode, parallel):
     from .salmon import run_salmon, run_multiple_salmons
     if sample_file:
-        run_multiple_salmons(sample_file, genome, outdir)
+        run_multiple_salmons(sample_file, genome, outdir, workmode, parallel)
     else:
         run_salmon(fq1, fq2, genome, outdir)
 
@@ -34,15 +36,13 @@ def run_hisat(sample_file, fq1, fq2, genome, outdir):
     else:
         run_hisat(fq1, fq2, genome, outdir)
 
-
 @cli.command(short_help="Aggregate TPM and Counts and QC Tables for multiple samples")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
 @click.option('--processdir', '-d', default='./', help="Combine all the TPMs under the folder")
-@click.option('--outpath', '-o', default='./', help="Prefix of the TPM and Count file")
-def aggr_TPM_QC(processdir, sample_file, outpath):
+@click.option('--name', '-n', default='sample', help="Outpath")
+def aggr_TPM_QC(processdir, sample_file, name):
     from .salmon import build_tpm_table
-    print("[info] Aggregate TPM into {}".format(outpath))
-    build_tpm_table(processdir, sample_file, outpath)
+    build_tpm_table(processdir, sample_file, name)
 
 @cli.command(short_help="Aggregate TPM and Counts and QC Tables for multiple samples")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
@@ -106,8 +106,3 @@ def pca_analysis(table, group, name):
 def diff_power_analysis(table, group, comparefile, qcfile, name):
     from baseq.rna.qc.pca import pca_score_power
     pca_score_power(table, group, comparefile, qcfile)
-
-# @cli.command(short_help="slice|")
-# def tools(name1, name2, table, outdir):
-#     from .salmon import Plot_corelation_fig
-#     Plot_corelation_fig(name1,name2, table)

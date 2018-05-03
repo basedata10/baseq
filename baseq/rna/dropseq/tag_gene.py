@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
-
 import os, bisect, sys, json
 import numpy as np
 from .bam_parser import get_cigar_segments
+from baseq.mgt.config import get_config
 
-def tagging_reads(star_index_dir, cellranger_refs, bam_path, out_path, bc_prefix):
-
+def tagging_reads(genome, bam, outpath):
     """
     Tagging reads will transform the genomic position of reads to the gene name
     Report the genes for a ...
     """
+    print("[info] File write to {}".format(outpath))
+
+    star_index_dir = get_config("RNA_ref_"+genome, "star_index")
+    cellranger_refs = get_config("RNA_ref_"+genome, "cellranger")
 
     #read star index
     chrom_name_path = os.path.join(star_index_dir, "chrName.txt")
@@ -109,7 +112,7 @@ def tagging_reads(star_index_dir, cellranger_refs, bam_path, out_path, bc_prefix
     import pysam, itertools
     from collections import Counter
 
-    bam_file = pysam.Samfile(bam_path, 'rb')
+    bam_file = pysam.Samfile(bam, 'rb')
     genome_bam_iter = itertools.groupby(bam_file, key = lambda read: read.qname)
 
     res = {}
@@ -119,9 +122,6 @@ def tagging_reads(star_index_dir, cellranger_refs, bam_path, out_path, bc_prefix
         reads = list(reads_iter)
         read_genes = {}
         infos = qname.split('_')
-
-        if not bc_prefix == infos[1][0:len(bc_prefix)]:
-            continue
 
         barcode = infos[1]
 
@@ -136,7 +136,7 @@ def tagging_reads(star_index_dir, cellranger_refs, bam_path, out_path, bc_prefix
             for gene in res:
                 res2[gene] = Counter(res[gene])
             res = {}
-            with open(out_path, 'a') as outfile:
+            with open(outpath, 'a') as outfile:
                 outfile.write(previous_barcode + '\t')
                 json.dump(res2, outfile)
                 outfile.write('\n')
@@ -163,13 +163,16 @@ def tagging_reads(star_index_dir, cellranger_refs, bam_path, out_path, bc_prefix
                 if read.is_reverse:
                     required_strand = 2
 
-                tx_hits = {k:v for k, v in tx_hits.iteritems() if v['strand']==required_strand}
-                gene_info = {x['gene']:{'overlap_len':0, 'dist_to_end':10000} for x in tx_hits.values()}
+                # tx_hits:
+                tx_hits = {k:v for k, v in tx_hits.items() if v['strand']==required_strand}
                 strand_info = {x['gene']:x['strand'] for x in tx_hits.values()}
+
+                #gene_info: initiate the informations for each gene in the tx_hits
+                gene_info = {x['gene']:{'overlap_len':0, 'dist_to_end':10000} for x in tx_hits.values()}
 
                 for tx in tx_hits:
                     gene = tx_hits[tx]['gene']
-                    #If the gene already have good alignment, skip
+                    # If the gene already have good alignment, skip
                     if gene_info[gene]['overlap_len']>= 0.9 * rlen:
                         continue
 
@@ -184,16 +187,16 @@ def tagging_reads(star_index_dir, cellranger_refs, bam_path, out_path, bc_prefix
                     gene_info[gene]['overlap_len'] = max(read_exon_overlap, gene_info[gene]['overlap_len'])
                     gene_info[gene]['dist_to_end'] = read_exon[3]
 
-                gene_info = {k:v for k, v in gene_info.iteritems() if v['overlap_len'] >= 0.5*rlen}
+                gene_info = {k:v for k, v in gene_info.items() if v['overlap_len'] >= 0.5*rlen}
 
-            for k, v in gene_info.iteritems():
+            for k, v in gene_info.items():
                 read_genes[k] = v
 
-        if len(read_genes.keys()) == 1:
-            mapgene =  read_genes.keys()[0]
+        if len(list(read_genes)) == 1:
+            mapgene = list(read_genes)[0]
         else:
-            gene_info = {k: v for k, v in read_genes.iteritems() if v['dist_to_end'] <= 400}
-            gene_names = [x[0] for x in sorted(gene_info.items(), key=lambda (k,v): v['dist_to_end'])]
+            gene_info = {k: v for k, v in read_genes.items() if v['dist_to_end'] <= 400}
+            gene_names = [x[0] for x in sorted(list(gene_info.items()), key=lambda val: val[1]['dist_to_end'])]
             gene_names.append("")
             mapgene = gene_names[0]
 
@@ -211,7 +214,7 @@ def tagging_reads(star_index_dir, cellranger_refs, bam_path, out_path, bc_prefix
     for gene in res:
         res2[gene] = Counter(res[gene])
 
-    with open(out_path, 'a') as outfile:
+    with open(outpath, 'a') as outfile:
         outfile.write(barcode + '\t')
         json.dump(res2, outfile)
         outfile.write('\n')

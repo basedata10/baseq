@@ -28,6 +28,7 @@ def drops_pipe(genome, protocol, cells, minreads, name, fq1, fq2, dir, top_milli
     bc_splits_dir = os.path.join(dir, "barcode_splits")
     align_dir = os.path.join(dir, "star_align")
     tagging_dir = os.path.join(dir, "read_tagging")
+    tpm_table = os.path.join(dir, "TPM.{}.txt".format(name))
 
     from itertools import product
     barcode_prefix = [x[0] + x[1] for x in list(product('ATCG', repeat=2))]
@@ -92,9 +93,7 @@ def drops_pipe(genome, protocol, cells, minreads, name, fq1, fq2, dir, top_milli
                 else:
                     exp[gene] = UMI[gene]
 
-        write_to_table(barcodes_lists, exp, "hehe.txt")
-
-
+        write_to_table(barcodes_lists, exp, tpm_table)
 
 @cli.command(short_help="Barcode Counting")
 @click.option('--name', '-n', default='sample', help="sample name")

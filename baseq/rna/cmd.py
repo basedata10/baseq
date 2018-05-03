@@ -36,6 +36,19 @@ def run_hisat(sample_file, fq1, fq2, genome, outdir):
     else:
         run_hisat(fq1, fq2, genome, outdir)
 
+@cli.command(short_help="STAR alignment and cufflinks quatification")
+@click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
+@click.option('--genome', '-g', default='hg38', help="Species hg19 or mm10/mm38")
+@click.option('--fq1', '-1', default='', help="Fastq 1")
+@click.option('--fq2', '-2', default='', help="Fastq 2")
+@click.option('--outdir', '-d', default='', help="The scripts and output path")
+def run_star(sample_file, fq1, fq2, genome, outdir):
+    from .star import run_star, run_multiple_star
+    if sample_file:
+        run_multiple_star(sample_file, genome, outdir)
+    else:
+        run_star(fq1, fq2, genome, outdir)
+
 @cli.command(short_help="Aggregate TPM and Counts and QC Tables for multiple samples")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
 @click.option('--processdir', '-d', default='./', help="Combine all the TPMs under the folder")

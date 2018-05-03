@@ -19,7 +19,7 @@ def mutate_single_base(seq):
 from baseq.mgt.config import get_config
 
 def read_whitelist(protocol):
-    whilelistdir = get_config("RNA", "whitelistDir")
+    whilelistdir = get_config("Drops", "whitelistDir")
     if protocol == "10X":
         bc_white = [set()]
         white_path = os.path.join(whilelistdir, "whitelist.10X.txt")
@@ -34,8 +34,6 @@ def read_whitelist(protocol):
             for line in infile:
                 bc_rev = rev_comp(line.strip())
                 bc_white[0].add(bc_rev)
-                # for bc_mis in mutate_single_base(bc_rev):
-                #     bc_white[0].add(bc_mis)
         white_path = os.path.join(whilelistdir, "whitelist.indrop_2.txt")
         with open(white_path, 'r') as infile:
             for line in infile:

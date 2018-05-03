@@ -1,6 +1,5 @@
 import os
 
-
 def write_buffer(buffer, filehandles):
     for key in buffer.keys():
         filehandles[key].writelines(buffer[key])

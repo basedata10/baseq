@@ -10,6 +10,7 @@ Tests/
 build
 dist
 baseq/baseq.egg*
+*egg-info*
 baseq.egg-info/
 baseq/build
 baseq/dist

@@ -11,8 +11,8 @@ def tagging_reads(genome, bam, outpath):
     """
     print("[info] File write to {}".format(outpath))
 
-    star_index_dir = get_config("RNA_ref_"+genome, "star_index")
-    cellranger_refs = get_config("RNA_ref_"+genome, "cellranger")
+    cellranger_refs = get_config("Drops", "cellranger_ref_"+genome)
+    star_index_dir = os.path.join(cellranger_refs, "star")
 
     #read star index
     chrom_name_path = os.path.join(star_index_dir, "chrName.txt")

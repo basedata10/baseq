@@ -95,7 +95,7 @@ def split_barcode(barcode, fastq, outprefix, suffix):
 @click.option('--fq2', '-2', default='', help='fastq2')
 def filter_polyAT(samplefile, seqfile, fq1, fq2, name, thread):
     print("[info] Filter the Reads with polyA/polyT...")
-    from .trim_fastq import filter_fastq_pair_by_sequence
+    from .filter_reads import filter_fastq_pair_by_sequence
     from baseq.fastq.sample_file import check_sample_files
     samples = check_sample_files(samplefile, fq1, fq2)
     from concurrent.futures import ThreadPoolExecutor

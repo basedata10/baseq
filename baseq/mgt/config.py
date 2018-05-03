@@ -40,6 +40,10 @@ class sectionManager:
             sys.exit("[error] '{}' is not configured in [{}]. \n[error] Please add the item in '{}'.".format(key, self.name, self.config.file))
 
 def get_config(section, item):
-    section_cfg = configManager().get_section(section)
+    if 'BASEQCFG' in os.environ and os.path.exists(os.environ['BASEQCFG']):
+        section_cfg = configManager(os.environ['BASEQCFG']).get_section(section)
+        print(os.environ['BASEQCFG'])
+    else:
+        section_cfg = configManager().get_section(section)
     cfg = section_cfg.get(item)
     return cfg

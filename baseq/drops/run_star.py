@@ -6,7 +6,7 @@ cd ${workdir}
 ${STAR} --genomeLoad LoadAndRemove --genomeDir ${STAR_REF} \
 --readFilesIn ${file} --runThreadN 10 --outSAMunmapped Within \
 --outSAMtype BAM Unsorted --outFileNamePrefix ${name}_
-  ${samtools} sort -n -@ 10 ${name}_Aligned.out.bam -o ${name}.sort.bam
+${samtools} sort -n -@ 10 ${name}_Aligned.out.bam -o ${name}.sort.bam
 rm ${name}_Aligned.out.bam
 """
 
@@ -19,9 +19,10 @@ def genrate_star_script(bc_dir, genome, sample, workdir, workmode):
     if not os.path.exists(workdir):
         os.mkdir(workdir)
 
-    STAR = get_config("RNA", "star")
-    STAR_REF = get_config("RNA_ref_" + genome, "star_index")
-    samtools = get_config("RNA", "samtools")
+    STAR = get_config("Drops", "star")
+    cellranger_refs = get_config("Drops", "cellranger_ref_"+genome)
+    STAR_REF = os.path.join(cellranger_refs, "star")
+    samtools = get_config("Drops", "samtools")
 
     def work_script(name, file):
         return Template(star_script).substitute(
@@ -50,12 +51,13 @@ def genrate_star_script(bc_dir, genome, sample, workdir, workmode):
     write_bash_qsub("./", bash_files, "work.qsub.align.sh")
 
 def run_star_multiple(bc_dir, workdir, sample, genome, parallel):
-    from concurrent.futures import ThreadPoolExecutor
-    pool = ThreadPoolExecutor(parallel)
+    import multiprocessing as mp
+    pool = mp.Pool(processes=int(parallel))
 
-    STAR = get_config("RNA", "star")
-    STAR_REF = get_config("RNA_ref_" + genome, "star_index")
-    samtools = get_config("RNA", "samtools")
+    STAR = get_config("Drops", "star")
+    cellranger_refs = get_config("Drops", "cellranger_ref_"+genome)
+    STAR_REF = os.path.join(cellranger_refs, "star")
+    samtools = get_config("Drops", "samtools")
 
     def work_script(name, file):
         return Template(star_script).substitute(
@@ -72,4 +74,7 @@ def run_star_multiple(bc_dir, workdir, sample, genome, parallel):
     for bc in barcode_prefix:
         fastq = os.path.join(bc_dir, "split.{}.{}.fq".format(sample, bc))
         script = work_script(bc, fastq)
-        pool.submit(run_cmd, "Star Alignment", script)
+        pool.apply_async(run_cmd, ("Star Alignment", script,))
+
+    pool.close()
+    pool.join()

@@ -1,4 +1,4 @@
-import click, sys
+import click
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -7,5 +7,3 @@ def cli():
     click.echo("Welcome to baseq-RNA")
 
 from .cmd import *
-from .dropseq.cmd import *
-

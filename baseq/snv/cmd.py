@@ -1,10 +1,5 @@
 import click
-
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-@click.group(context_settings=CONTEXT_SETTINGS)
-
-def cli():
-    click.echo("baseq-SNP Pipeline Started")
+from baseq.snv import cli
 
 @cli.command(short_help="Generate Pipeline")
 @click.option('--multiple', '-m', default='', help="Tab seprated file: name, fq1, fq2, if set, the name, fq1, fq2 options is disabled")
@@ -100,13 +95,6 @@ def filter(path, outpath):
     res = Annovar_Filter(path).filter_1KGenome()
     res.to_csv(outpath,sep="\t")
 
-@cli.command(short_help="Check the enrichment quality, input: bam, interval and outpath")
-@click.argument("bampath")
-@click.argument("interval")
-@click.argument("outpath")
-def QC_enrich(bampath, interval, outpath):
-    from .quality import QC_enrich
-    QC_enrich(bampath, interval, outpath)
 
 @cli.command(short_help="Check the enrichment quality, input: bam, interval and outpath")
 @click.argument("bampath")

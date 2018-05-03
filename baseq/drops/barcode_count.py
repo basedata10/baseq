@@ -1,5 +1,6 @@
 import pandas as pd
 from baseq.utils.file_reader import read_file_by_lines
+from time import time
 
 def HammingDistance(seq1, seq2):
     return sum([1 for x in zip(seq1, seq2) if x[0] != x[1]])
@@ -26,20 +27,22 @@ def cut_seq_barcode(protocol, seq):
 def count_barcodes(path, output, protocol, min_reads, topreads=100):
     bc_counts = {}
     index = 0
+    start = time()
     print("[info] Process the top {}M reads in {}".format(topreads, path))
     print("[info] Barcode with less than {} reads is discard".format(min_reads))
     lines = read_file_by_lines(path, topreads * 1000 * 1000, 4)
     for line in lines:
         index += 1
         bc = cut_seq_barcode(protocol, line[1])
+        if index % 1000000 == 0:
+            print("[info] Processed {}M lines in {}s".format(index/1000000, round(time()-start, 2)))
+            start = time()
         if bc == "":
             continue
         if bc in bc_counts:
             bc_counts[bc] += 1
         else:
             bc_counts[bc] = 1
-        if index % 1000000 == 0:
-            print("\r[info] Processed {}M lines".format(index/1000000))
 
     bc_counts_filter = []
     for k, v in bc_counts.items():

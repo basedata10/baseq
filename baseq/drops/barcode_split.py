@@ -1,9 +1,8 @@
 import os, sys
 import pandas as pd
 import numpy as np
-import time
 from baseq.utils.file_reader import read_file_by_lines
-from baseq.rna.dropseq.barcode_count import cut_seq_barcode
+from baseq.drops.barcode_count import cut_seq_barcode
 
 from itertools import product
 barcode_prefix = [x[0]+x[1] for x in list(product('ATCG', repeat=2))]
@@ -35,7 +34,8 @@ def getUMI(protocol, barcode, seq1, mutate_last_base):
         UMI = seq1[len(barcode) + 22:len(barcode) + 22 + 6]
     return UMI
 
-def barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir, topreads=10):
+from time import time
+def barcode_split(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
     #barcode infos
     barcode_corrected = {}
     barcode_mutate_last = []
@@ -56,18 +56,20 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir, top
             for bc in barcode_mis:
                 barcode_corrected[bc] = barcode
 
+    #make buffers and file...
     files, buffers = open_splited_files(dir, name)
     fq1 = read_file_by_lines(fq1, topreads * 1000 * 1000, 4)
     fq2 = read_file_by_lines(fq2, topreads * 1000 * 1000, 4)
 
     counter = 0
-
+    start = time()
     for read1 in fq1:
         read2 = next(fq2)
         seq1 = read1[1]
         counter += 1
         if counter % 1000000 == 0:
-            print("[info] Processed {}M reads".format(counter / 1000000))
+            print("[info] Processed {}M lines in {}s".format(counter/1000000, round(time()-start, 2)))
+            start = time()
 
         if counter % 100000 == 0:
             for key in buffers:

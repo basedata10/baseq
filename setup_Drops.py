@@ -10,9 +10,9 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='baseq',
-    version='0.1.0',
-    description='Tools For Bioinformatics',
+    name='baseq_drops',
+    version='0.1.3',
+    description='Pipeline for processing Drop-seq/10X/inDrop datas',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://gene.pku.edu.cn',
@@ -29,7 +29,7 @@ setup(
 
     keywords = 'sample setuptools development',
 
-    packages = find_packages(include=['baseq*']),
+    packages = find_packages(include=['baseq*'], exclude=['baseq.cnv', 'baseq.snv', 'baseq.align', 'baseq.bed']),
 
     install_requires=[
         'pandas',
@@ -47,13 +47,6 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'baseq=baseq.cmd:cli',
-            'baseq-manage=baseq.mgt:cli',
-            'baseq-fastq=baseq.fastq:cli',
-            'baseq-CNV=baseq.cnv:cli',
-            'baseq-BAM=baseq.bam:cli',
-            'baseq-SNV=baseq.snv.cmd:cli',
-            'baseq-RNA=baseq.rna:cli',
             'baseq-Drop=baseq.drops:cli',
         ]
     }

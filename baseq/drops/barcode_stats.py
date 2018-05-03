@@ -1,5 +1,4 @@
 import pandas as pd
-from baseq.utils.file_reader import read_file_by_lines
 
 def mutate_single_base(seq):
     mutated = []
@@ -51,7 +50,7 @@ def barcode_correct_filter(protocol="", barcode_count="", max_cell=10000, min_re
         df.loc[index, "counts"] = 0
 
     #Filter by whitelist
-    from baseq.rna.dropseq.whitelist import read_whitelist, whitelist_check
+    from baseq.drops.whitelist import read_whitelist, whitelist_check
     bc_white = read_whitelist(protocol)
     for index, row in df.iterrows():
         valid = whitelist_check(bc_white, protocol, index)

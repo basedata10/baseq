@@ -2,13 +2,10 @@ import baseq
 import click
 import os
 
-
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('--name', default='', help='Who are you?')
-
-def cli(name):
+def cli():
     pass
 
 @cli.command(short_help = "Show the status of jobs")
@@ -16,7 +13,7 @@ def cli(name):
 def list_fastq(path):
     click.echo('Start Using CNV Analysis', path)
 
-@cli.command(short_help = "Show the Softs")
+@cli.command(short_help = "Show the Softwares...")
 def softs():
     click.echo('Show the softs')
 
@@ -29,7 +26,6 @@ def list_reference(path):
 @click.option('--thread', '-t', default='1', help='Threads used for each command (1)')
 @click.option('--mem', '-m', default='2G', help='Memory (2G)')
 @click.argument('script_path')
-
 def QSUB(script_path, thread, mem):
     print(script_path, thread, mem)
 

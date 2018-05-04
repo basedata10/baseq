@@ -24,7 +24,3 @@ def correlation_heatmap(table, name):
     ax.set_yticklabels([list(df)[x] for x in ticks])
     plt.xticks(rotation=90)
     plt.savefig("./"+name+".png")
-
-
-
-

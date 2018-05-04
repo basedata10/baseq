@@ -66,25 +66,7 @@ def aggr_FPKM_QC(processdir, sample_file, outpath):
     print("[info] Aggregate FPKM into {}".format(outpath))
     build_FPKM_table(processdir, sample_file, outpath)
 
-@cli.command(short_help="Run DESeq2")
-@click.option('--groupfile', '-g', default='', help="Tab seprated file: samplename, groups")
-@click.option('--comparefile', '-p', default='', help="Tab seprated file: group1, group2")
-@click.option('--tpmfile', '-t', default='./', help="TPM filepath")
-@click.option('--countfile', '-c', default='./', help="Read Count filepath")
-@click.option('--outpath', '-o', default='./diff_exp', help="Folder for exportation...")
-def deseq2(tpmfile, countfile, groupfile, comparefile, outpath):
-    from .deseq.deseq2 import deseq2
-    print("[info] DESeq2 {}".format(outpath))
-    deseq2(tpmfile, countfile, groupfile, comparefile, outpath)
 
-@cli.command(short_help="Run DESeq2")
-@click.option('--groupfile', '-g', default='', help="Tab seprated file: samplename, groups")
-@click.option('--comparefile', '-p', default='', help="Tab seprated file: group1, group2")
-@click.option('--outdir', '-o', default='./diff_exp', help="Folder for exportation...")
-def deseq2_result(groupfile, comparefile, outdir):
-    from .deseq.deseq2 import pack_DeSeq2_result
-    print("[info] DESeq2 {}".format(outdir))
-    pack_DeSeq2_result(groupfile, comparefile, outdir)
 
 @cli.command(short_help="plot tpm correlation figure between samples")
 @click.option('--name1', '-1', default='', help="sample name")
@@ -119,3 +101,6 @@ def pca_analysis(table, group, name):
 def diff_power_analysis(table, group, comparefile, qcfile, name):
     from baseq.rna.qc.pca import pca_score_power
     pca_score_power(table, group, comparefile, qcfile)
+
+from .table.cmd import *
+from .deseq.cmd import *

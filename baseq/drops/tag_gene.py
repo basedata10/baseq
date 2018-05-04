@@ -9,6 +9,10 @@ def tagging_reads(genome, bam, outpath):
     Tagging reads will transform the genomic position of reads to the gene name
     Report the genes for a ...
     """
+    #Remove the Already Exists File
+    if os.path.exists(outpath):
+        os.remove(outpath)
+
     print("[info] File write to {}".format(outpath))
 
     cellranger_refs = get_config("Drops", "cellranger_ref_"+genome)
@@ -124,9 +128,7 @@ def tagging_reads(genome, bam, outpath):
         infos = qname.split('_')
 
         barcode = infos[1]
-
         UMI = infos[2]
-        readIdx = infos[3]
 
         if barcode != previous_barcode:
             if previous_barcode == "":
@@ -140,6 +142,7 @@ def tagging_reads(genome, bam, outpath):
                 outfile.write(previous_barcode + '\t')
                 json.dump(res2, outfile)
                 outfile.write('\n')
+
             previous_barcode = barcode
 
         for read in reads:

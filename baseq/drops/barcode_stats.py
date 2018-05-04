@@ -58,11 +58,11 @@ def barcode_correct_filter(protocol="", barcode_count="", max_cell=10000, min_re
 
     df_white = df[df['whitelist']==1]
 
-    #filter by read counts
+    #Filter by read counts
     print("[info] Filtering the barcodes exceeds number {}".format(min_reads))
     df_white_reads = df_white.loc[df_white['total_reads'] >= min_reads].sort_values("total_reads", ascending=False)
 
-    #Print informations ...
+    #Print informations
     print("[info] Raw CBs count {} ==> Whitelist CBs {} ==> Abundent CBs {}".format(len(df.index), len(df_white.index), len(df_white_reads.index)))
     print("[info] Raw Reads {} ==> Whitelist Reads {} ==> Abundent Reads {}".format(sum(df['total_reads']), sum(df_white['total_reads']),
                                                                                     sum(df_white_reads['total_reads'])))

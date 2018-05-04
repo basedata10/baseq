@@ -63,14 +63,14 @@ def run_all(multiple, name, fq1, fq2, interval, dir, job):
         write_file(script_path, script, "Script of {}".format(name))
         script_paths.append(script_path)
 
-    if job == "local":
-        work = "\n".join(["bash {}".format(line) for line in script_paths])
-    elif job == "qsub":
-        work = "\n".join(["qsub -cwd -l vf=10g {}".format(line) for line in script_paths])
-    elif job == "bsub":
-        work = "\n".join(["bsub {}".format(line) for line in script_paths])
-    else:
-        pass
+    # if job == "local":
+    #     work = "\n".join(["bash {}".format(line) for line in script_paths])
+    # elif job == "qsub":
+    #     work = "\n".join(["qsub -cwd -l vf=10g {}".format(line) for line in script_paths])
+    # elif job == "bsub":
+    #     work = "\n".join(["bsub {}".format(line) for line in script_paths])
+    # else:
+    #     pass
 
     work_path = os.path.join(outDir, "work.sh")
     write_file(work_path, work, "Main Script".format(sample))

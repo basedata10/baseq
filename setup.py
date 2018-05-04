@@ -48,7 +48,6 @@ setup(
     entry_points={
         'console_scripts': [
             'baseq=baseq.cmd:cli',
-            'baseq-manage=baseq.mgt:cli',
             'baseq-fastq=baseq.fastq:cli',
             'baseq-CNV=baseq.cnv:cli',
             'baseq-BAM=baseq.bam:cli',

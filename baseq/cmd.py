@@ -9,7 +9,8 @@ def cli():
     # cmd = 'eval "$(_baseq_COMPLETE=source baseq)"'
     # subprocess.call(cmd, shell=True)
     pass
-    #click.echo("")
+
+from .tests import *
 
 @cli.command(short_help = "Show the status of jobs")
 def init():
@@ -65,3 +66,4 @@ def deploy(command):
 def csv(command):
     from .utils.csvtools import csvtools
     csvtools(command)
+

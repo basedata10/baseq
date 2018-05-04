@@ -7,4 +7,4 @@ from baseq.snv import cli
 @click.argument("outpath")
 def QC_enrich(bampath, interval, outpath):
     from .enrich import enrich_quality
-    QC_enrich(bampath, interval, outpath)
+    enrich_quality(bampath, interval, outpath)

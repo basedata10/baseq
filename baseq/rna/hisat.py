@@ -144,3 +144,11 @@ def build_FPKM_table(processdir, samplefile, outpath):
     qc_file = open(qc_file_path, "w")
     qc_file.writelines("\n".join(qc))
     qc_file.close()
+
+
+def run_featureCounts():
+
+
+
+    pass
+

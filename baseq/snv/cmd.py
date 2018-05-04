@@ -129,3 +129,56 @@ def web_data(path, vcf_annovar):
     import json
     with open("./SNV.json", "w") as file:
         json.dump(data.data, file)
+
+
+@cli.command(short_help="bwa alignment")
+@click.option('--fq1', '-1', default='', help='fastq1 path')
+@click.option('--fq2', '-2', default='', help='fastq2 path (optional)')
+@click.option('--name','-n',default='',help='prefix of bamfile')
+@click.option('--genome','-g',default='',help='Species hg19 or mm10/mm38')
+def run_bwa(fq1,fq2,name,genome):
+    from .gatk import run_alignment
+    run_alignment(fq1,fq2,name,genome)
+    print("[info] alignment complete")
+
+
+
+@cli.command(short_help="mark duplicates")
+@click.option('--name', '-n', default='', help='prefix of bamfile')
+def run_markdup(name):
+    from .gatk import run_markdup
+    run_markdup(name)
+    print("[info] mark duplicates complete")
+
+@cli.command(short_help="Base Recalibrator")
+@click.option('--name','-n',default='',help='prefix of bamfile')
+@click.option('--genome','-g',default='',help='Species hg38/hg19 or mm10/mm38')
+def run_bqsr(name,genome):
+    from .gatk import bqsr
+    bqsr(name,genome)
+    print("[info]base recalibrator complete")
+
+@cli.command(short_help="call variants")
+@click.option('--name','-n',default='',help='prefix of bamfile')
+@click.option('--genome','-g',default='',help='Species hg19 or mm10/mm38')
+def run_callvar(name,genome):
+    from .gatk import run_callvar
+    run_callvar(name,genome)
+    print("[info]call variants complete")
+
+@cli.command(short_help="select variants")
+@click.option('--name','-n',default='',help='prefix of bamfile')
+@click.option('--genome','-g',default='',help='Species hg19 or mm10/mm38')
+def run_selectvar(name,genome):
+    from .gatk import selectvar
+    selectvar(name,genome)
+    print("[info] select variants complete")
+
+
+@cli.command(short_help="annovar annotation")
+@click.option('--name','-n',default='',help='prefix of bamfile')
+@click.option('--genome','-g',default='',help='Species hg19 or mm10/mm38')
+def run_annovar(name,genome):
+    from .annovar import run_annovar
+    run_annovar(name,genome)
+    print("[info] annovar annotation complete")

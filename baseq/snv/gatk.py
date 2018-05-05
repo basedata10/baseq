@@ -22,15 +22,12 @@ def run_alignment(fq1, fq2, sample, genome, outfile):
 
     if fq1 and fq2 and os.path.exists(fq1) and os.path.exists(fq2):
         bwa_cmd = bwa_cmd_script_p.format(bwa=bwa, sample=sample, genome=genome, fq1=fq1, fq2=fq2, samfile=samfile)
-
     elif fq1 and os.path.exists(fq1):
         bwa_cmd = bwa_cmd_script_s.format(bwa=bwa, sample=sample, genome=genome, fq1=fq1, samfile=samfile)
-
     sort_index_cmd=sort_index_cmd_script.format(picard=picard, sample=sample, samtools=samtools, java=java, outfile=outfile, samfile=samfile)
 
     run_cmd("bwa alignment", "".join(bwa_cmd))
     run_cmd("PICARD SortSam", "".join(sort_index_cmd))
-
     return bwa_cmd+"\n"+sort_index_cmd
 
 markdup_cmd_script ="""
@@ -47,41 +44,46 @@ def run_markdup(bamfile, markedbam):
     return cmd
 
 bqsr_cmd_script = """
-{0} BaseRecalibrator -R {1} -L {2} -I {3}_marked.bam --known-sites {4} --known-sites {5} --known-sites {6} -O {3}_temp.table
-{0} ApplyBQSR -R {1} -L {2} -I {3}_marked.bam -bqsr {3}_temp.table -O {3}_marked_bqsr.bam
+{gatk} BaseRecalibrator -R {index} -L {interval} -I {markedbam} --known-sites {dbsnp} --known-sites {snp} --known-sites {indel} -O {markedbam}.table
+{gatk} ApplyBQSR -R {index} -L {interval} -I {markedbam} -bqsr {markedbam}.table -O {bqsrbam}
 """
-def bqsr(sample,genome,run=True):
-    GATK = get_config("SNV", "GATK")
+def bqsr(markedbam,bqsrbam,genome,run=True):
+    gatk = get_config("SNV", "GATK")
     index = get_config("SNV_ref_"+genome,"bwa_index")
     DBSNP = get_config("SNV_ref_"+genome,"DBSNP")
     SNP = get_config("SNV_ref_"+genome,"SNP")
     INDEL = get_config("SNV_ref_"+genome,"INDEL")
     interval = get_config("SNV_ref_"+genome,"interval")
-    bqsr_cmd = bqsr_cmd_script.format(GATK,index,interval,sample,DBSNP,SNP,INDEL)
+    bqsr_cmd = bqsr_cmd_script.format(gatk=gatk,index=index,interval=interval,markedbam=markedbam,bqsrbam=bqsrbam,dbsnp=DBSNP,snp=SNP,indel=INDEL)
     if run:
         run_cmd("BaseRecalibrator","".join(bqsr_cmd))
     return bqsr_cmd
 
 callvar_cmd_script = """
-{0} --java-options "-Xmx4g" HaplotypeCaller -R {1} -L {2} -I {3}_marked_bqsr.bam -O {3}_raw.snps.indels.vcf -bamout bamout.bam --native-pair-hmm-threads 20
+{gatk} --java-options "-Xmx4g" HaplotypeCaller -R {index} -L {interval} -I {bqsrbam} -O {rawvcf} -bamout bamout.bam --native-pair-hmm-threads 20
 """
-def run_callvar(sample,genome,run=True):
+def run_callvar(bqsrbam,rawvcf,genome,run=True):
     GATK = get_config("SNV", "GATK")
     index = get_config("SNV_ref_" + genome, "bwa_index")
     interval = get_config("SNV_ref_" + genome, "interval")
-    callvar_cmd = callvar_cmd_script.format(GATK, index, interval, sample)
+    callvar_cmd = callvar_cmd_script.format(gatk=GATK, index=index, interval=interval, bqsrbam=bqsrbam, rawvcf=rawvcf)
     if run:
         run_cmd("call variants","".join(callvar_cmd))
     return callvar_cmd
 
 selectvar_cmd_script = """
-{0} SelectVariants -R {1} -V {2}_raw.snps.indels.vcf --select-type-to-include SNP -O {2}_raw_snps.vcf
-{0} VariantFiltration -R {1} -V {2}_raw_snps.vcf -O {2}_filtered_snps.vcf --filter-expression "QD < 2.0 || FS > 60.0 || MQ < 40.0" --filter-name "my_snp_filter"
+{gatk} SelectVariants -R {index} -V {rawvcf} --select-type-to-include SNP -O {selectvcf}
+{gatk} VariantFiltration -R {index} -V {selectvcf} -O {filtervcf} --filter-expression "QD < 2.0 || FS > 60.0 || MQ < 40.0" --filter-name "my_snp_filter"
 """
-def selectvar(sample,genome,run=True):
+
+
+def selectvar(rawvcf,selectvcf,filtervcf,genome,run=True):
     GATK = get_config("SNV", "GATK")
     index = get_config("SNV_ref_" + genome, "bwa_index")
-    selectvar_cmd = selectvar_cmd_script.format(GATK,index,sample)
+    selectvar_cmd = selectvar_cmd_script.format(gatk=GATK,index=index,rawvcf=rawvcf,selectvcf=selectvcf,filtervcf=filtervcf)
     if run:
         run_cmd("SelectVariants","".join(selectvar_cmd))
     return selectvar_cmd
+
+def check_bam_file():
+    pass

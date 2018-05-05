@@ -35,14 +35,15 @@ class Annovar:
         self.check_database()
 
 annovar_cmd_script = """
-{0}/convert2annovar.pl -format vcf4 {1}_raw_snps.vcf >{1}_snps.avinput
-{0}/table_annovar.pl {1}_snps.avinput {2} -buildver hg38 -out {1} -remove -protocol \
+{annovar}/convert2annovar.pl -format vcf4 {filtervcf} >{annovarfile}
+{annovar}/table_annovar.pl {annovarfile} {ref_annovar} -buildver {genome} -out {name} -remove -protocol \
 refGene,esp6500siv2_all,1000g2015aug_all,1000g2015aug_eas,exac03,avsnp147,dbnsfp30a,clinvar_20170130,cosmic70,dbscsnv11,cytoBand \
--operation g,f,f,f,f,f,f,f,f,f,r -nastring . -csvout"""
-def run_annovar(sample,genome,run=True):
+-operation g,f,f,f,f,f,f,f,f,f,r -nastring . -csvout
+"""
+def run_annovar(filtervcf,annovarfile,name,genome,run=True):
     annovar = get_config("Annovar","annovar")
-    annovar_ref = get_config("Annovar","annovar_db_hg38")
-    annovar_cmd = annovar_cmd_script.format(annovar, sample, annovar_ref)
+    ref = get_config("Annovar","annovar_db_hg38")
+    annovar_cmd = annovar_cmd_script.format(annovar=annovar, filtervcf=filtervcf, annovarfile=annovarfile, ref_annovar=ref, name=name,genome=genome)
     if run:
         run_cmd("convert vcf file to aninput format","".join(annovar_cmd))
     return annovar_cmd

@@ -1,4 +1,4 @@
-import click
+import click, os
 from baseq.snv import cli
 
 @cli.command(short_help="Generate Pipeline")
@@ -145,7 +145,7 @@ def run_bwa(fq1, fq2, name, genome, outfile):
 
 
 @cli.command(short_help="mark duplicates")
-@click.option('--bamfile', '-b', default='', help='bamfile')
+@click.option('--bamfile', '-b', default='', help='bamfile for gatk analysis')
 @click.option('--markedbam', '-m', default='', help='marked bamfile')
 def run_markdup(bamfile, markedbam):
     from .gatk import run_markdup
@@ -153,33 +153,74 @@ def run_markdup(bamfile, markedbam):
     print("[info] Mark duplicates complete")
 
 @cli.command(short_help="Base Recalibrator")
-@click.option('--name','-n',default='',help='prefix of bamfile')
-@click.option('--genome','-g',default='',help='Species hg38/hg19 or mm10/mm38')
-def run_bqsr(name,genome):
+@click.option('--markedbam', '-m',default='', help='bam file with mark duplicates')
+@click.option('--genome', '-g',default='', help='Species hg38/hg19 or mm10/mm38')
+@click.option('--bqsrbam', '-q',default='', help='output bam file after base recalibrator')
+def run_bqsr(markedbam, bqsrbam, genome):
     from .gatk import bqsr
-    bqsr(name,genome)
+    bqsr(markedbam, bqsrbam, genome)
     print("[info]base recalibrator complete")
 
 @cli.command(short_help="call variants")
-@click.option('--name','-n',default='',help='prefix of bamfile')
-@click.option('--genome','-g',default='',help='Species hg19 or mm10/mm38')
-def run_callvar(name,genome):
+@click.option('--bqsrbam', '-q',default='', help='bam file with base recalibrator')
+@click.option('--genome', '-g',default='', help='Species hg19 or mm10/mm38')
+@click.option('--rawvcf', '-r',default='', help='output vcf file include snp and indel')
+def run_callvar(bqsrbam, rawvcf, genome):
     from .gatk import run_callvar
-    run_callvar(name,genome)
+    run_callvar(bqsrbam, rawvcf, genome)
     print("[info]call variants complete")
 
 @cli.command(short_help="select variants")
-@click.option('--name','-n',default='',help='prefix of bamfile')
-@click.option('--genome','-g',default='',help='Species hg19 or mm10/mm38')
-def run_selectvar(name,genome):
+@click.option('--rawvcf', '-r',default='', help='vcf file include snp and indel')
+@click.option('--selectvcf', '-s',default='', help='output file include snp only')
+@click.option('--filtervcf', '-f',default='', help='output vcf file after filtering low quality snp')
+@click.option('--genome', '-g',default='', help='Species hg19 or mm10/mm38')
+def run_selectvar(rawvcf, selectvcf, filtervcf, genome):
     from .gatk import selectvar
-    selectvar(name,genome)
+    selectvar(rawvcf, selectvcf, filtervcf, genome)
     print("[info] select variants complete")
 
+
 @cli.command(short_help="annovar annotation")
-@click.option('--name','-n',default='',help='prefix of bamfile')
-@click.option('--genome','-g',default='',help='Species hg19 or mm10/mm38')
-def run_annovar(name,genome):
+@click.option('--filtervcf', '-f', default='', help='vcf file after filtering low quality snp')
+@click.option('--genome','-g', default='', help='Species hg19 or mm10/mm38')
+@click.option('--annovarfile', '-a',default='', help='conver vcf to annovar')
+@click.option('--name', '-n', default='', help='prefix of annovar annotation file')
+def run_annovar(filtervcf,annovarfile,name,genome):
     from .annovar import run_annovar
-    run_annovar(name,genome)
+    run_annovar(filtervcf,annovarfile,name,genome)
     print("[info] annovar annotation complete")
+
+
+@cli.command(short_help="run gatk pipeline")
+@click.option('--fq1', '-1', default='', help='fastq1 path')
+@click.option('--fq2', '-2', default='', help='fastq2 path(optional)')
+@click.option('--dir', '-d', default='./', help='folder for output files')
+@click.option('--name', '-n', default='', help='name for output files')
+@click.option('--genome', '-g', default='', help='Species hg19/hg38 or mm10/mm38')
+@click.option('--bamfile', '-b', default='', help='bamfile for gatk analysis')
+def run_gatkpipe(dir, fq1, fq2, bamfile, name, genome):
+    outdir = os.path.abspath(os.path.join(dir, name))
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    from .gatk import run_alignment, run_markdup, run_callvar, selectvar, bqsr
+    from .annovar import run_annovar
+    markedbam = os.path.join(outdir, "{}.marked.bam".format(name))
+    bqsrbam = os.path.join(outdir, "{}.marked.bqsr.bam".format(name))
+    rawvcf = os.path.join(outdir, "{}.raw.snp.indel.vcf".format(name))
+    selectvcf = os.path.join(outdir, "{}.raw.snp.vcf".format(name))
+    filtervcf = os.path.join(outdir, "{}.filter.snp.vcf".format(name))
+    annovarfile = os.path.join(outdir, "{}.snp.avinput".format(name))
+    if fq1 :
+        bamfile = os.path.join(outdir, "{}.bam".format(name))
+        run_alignment(fq1, fq2, name, genome, bamfile)
+        run_markdup(bamfile, markedbam)
+    if bamfile:
+        run_markdup(bamfile, markedbam)
+    bqsr(markedbam, bqsrbam, genome)
+    run_callvar(bqsrbam, rawvcf, genome)
+    selectvar(rawvcf, selectvcf, filtervcf, genome)
+    run_annovar(filtervcf, annovarfile, name, genome)
+
+def run_multi_gatkpipe():
+    pass

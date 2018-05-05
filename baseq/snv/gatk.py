@@ -2,48 +2,49 @@ import os
 from baseq.setting import bash_script_dir
 from baseq.mgt import get_config, run_cmd
 
-
 PICARD = get_config("SNV", "picard")
 GATK = get_config("SNV", "GATK")
 
-
-
-bwa_cmd_script_p = r"""{0} mem -t 8 -M -R "@RG\tID:{1}\tSM:{1}\tLB:WES\tPL:Illumina" {2} {3} {4} 1>{1}.sam"""
-bwa_cmd_script_s = r"""{0} mem -t 8 -M -R "@RG\tID:{1}\tSM:{1}\tLB:WES\tPL:Illumina" {2} {3} 1>{1}.sam"""
+bwa_cmd_script_p = r"""{bwa} mem -t 8 -M -R "@RG\tID:{sample}\tSM:{sample}\tLB:WES\tPL:Illumina" {genome} {fq1} {fq2}  1>{samfile}"""
+bwa_cmd_script_s = r"""{bwa} mem -t 8 -M -R "@RG\tID:{sample}\tSM:{sample}\tLB:WES\tPL:Illumina" {genome} {fq1} 1>{samfile}"""
 sort_index_cmd_script = """
-{3} -jar {0} SortSam SORT_ORDER=coordinate INPUT={1}.sam OUTPUT={1}.bam
-{2} index {1}.bam
+{java} -jar {picard} SortSam SORT_ORDER=coordinate INPUT={samfile} OUTPUT={outfile}
+{samtools} index {outfile}
+rm {samfile}
 """
-def run_alignment(fq1,fq2,sample,genome,run=True):
+def run_alignment(fq1, fq2, sample, genome, outfile):
     bwa = get_config("SNV", "bwa")
-    PICARD = get_config("SNV", "picard")
+    picard = get_config("SNV", "picard")
     java = get_config("SNV", "java")
     samtools = get_config("SNV", "samtools")
     genome = get_config("SNV_ref_"+genome, "bwa_index")
+    samfile = outfile+".sam"
+
     if fq1 and fq2 and os.path.exists(fq1) and os.path.exists(fq2):
-        bwa_cmd = bwa_cmd_script_p.format(bwa,sample,genome,fq1,fq2)
+        bwa_cmd = bwa_cmd_script_p.format(bwa=bwa, sample=sample, genome=genome, fq1=fq1, fq2=fq2, samfile=samfile)
+
     elif fq1 and os.path.exists(fq1):
-        bwa_cmd = bwa_cmd_script_s.format(bwa,sample,genome,fq1)
-    sort_index_cmd=sort_index_cmd_script.format(PICARD,sample,samtools,java)
-    if run:
-        run_cmd("bwa alignment","".join(bwa_cmd))
-        run_cmd("PICARD SortSam","".join(sort_index_cmd))
+        bwa_cmd = bwa_cmd_script_s.format(bwa=bwa, sample=sample, genome=genome, fq1=fq1, samfile=samfile)
+
+    sort_index_cmd=sort_index_cmd_script.format(picard=picard, sample=sample, samtools=samtools, java=java, outfile=outfile, samfile=samfile)
+
+    run_cmd("bwa alignment", "".join(bwa_cmd))
+    run_cmd("PICARD SortSam", "".join(sort_index_cmd))
+
     return bwa_cmd+"\n"+sort_index_cmd
 
-
-
 markdup_cmd_script ="""
-{0} -jar {1} MarkDuplicates INPUT={2}.bam OUTPUT={2}_marked.bam METRICS_FILE={2}.metrics
-{3} index {2}_marked.bam
+{java} -jar {picard} MarkDuplicates INPUT={bamfile} OUTPUT={markedbam} METRICS_FILE={markedbam}.metrics
+{samtools} index {markedbam}
 """
-def run_markdup(sample,run=True):
+
+def run_markdup(bamfile, markedbam):
     java = get_config("SNV", "java")
-    PICARD = get_config("SNV", "picard")
+    picard = get_config("SNV", "picard")
     samtools = get_config("RNA", "samtools")
-    markdup_cmd = markdup_cmd_script.format(java,PICARD,sample,samtools)
-    if run:
-        run_cmd("Mark duplicates","".join(markdup_cmd))
-    return markdup_cmd
+    cmd = markdup_cmd_script.format(java=java, picard=picard, samtools=samtools, markedbam=markedbam, bamfile=bamfile)
+    run_cmd("Mark duplicates","".join(cmd))
+    return cmd
 
 bqsr_cmd_script = """
 {0} BaseRecalibrator -R {1} -L {2} -I {3}_marked.bam --known-sites {4} --known-sites {5} --known-sites {6} -O {3}_temp.table
@@ -84,5 +85,3 @@ def selectvar(sample,genome,run=True):
     if run:
         run_cmd("SelectVariants","".join(selectvar_cmd))
     return selectvar_cmd
-
-

@@ -29,4 +29,4 @@ def enrich_quality(bampath, bedfile, outpath):
     total_bases = bam.mapped_reads * bam.match_length
 
     #10X 30X 50X 100X ratio
-
+    

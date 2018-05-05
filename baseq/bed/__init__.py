@@ -6,6 +6,12 @@ import pandas as pd
 baseq dev bed ./bed
 """
 
+import click, os, sys
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+@click.group(context_settings=CONTEXT_SETTINGS)
+def cli():
+    pass
+
 class BEDFILE:
     def __init__(self, path):
         self.bed = pd.read_table(path, usecols=range(3), names=['chr', 'start', 'end'])

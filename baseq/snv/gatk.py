@@ -1,5 +1,4 @@
 import os
-from baseq.setting import bash_script_dir
 from baseq.mgt import get_config, run_cmd
 
 PICARD = get_config("SNV", "picard")
@@ -8,14 +7,12 @@ GATK = get_config("SNV", "GATK")
 bwa_cmd_script_p = r"""{bwa} mem -t 8 -M -R "@RG\tID:{sample}\tSM:{sample}\tLB:WES\tPL:Illumina" {genome} {fq1} {fq2}  1>{samfile}"""
 bwa_cmd_script_s = r"""{bwa} mem -t 8 -M -R "@RG\tID:{sample}\tSM:{sample}\tLB:WES\tPL:Illumina" {genome} {fq1} 1>{samfile}"""
 sort_index_cmd_script = """
-{java} -jar {picard} SortSam SORT_ORDER=coordinate INPUT={samfile} OUTPUT={outfile}
+{samtools} sort -@ 8 {samfile} -o {outfile}
 {samtools} index {outfile}
 rm {samfile}
 """
 def run_alignment(fq1, fq2, sample, genome, outfile):
     bwa = get_config("SNV", "bwa")
-    picard = get_config("SNV", "picard")
-    java = get_config("SNV", "java")
     samtools = get_config("SNV", "samtools")
     genome = get_config("SNV_ref_"+genome, "bwa_index")
     samfile = outfile+".sam"
@@ -24,10 +21,10 @@ def run_alignment(fq1, fq2, sample, genome, outfile):
         bwa_cmd = bwa_cmd_script_p.format(bwa=bwa, sample=sample, genome=genome, fq1=fq1, fq2=fq2, samfile=samfile)
     elif fq1 and os.path.exists(fq1):
         bwa_cmd = bwa_cmd_script_s.format(bwa=bwa, sample=sample, genome=genome, fq1=fq1, samfile=samfile)
-    sort_index_cmd=sort_index_cmd_script.format(picard=picard, sample=sample, samtools=samtools, java=java, outfile=outfile, samfile=samfile)
+    sort_index_cmd=sort_index_cmd_script.format(samtools=samtools, outfile=outfile, samfile=samfile)
 
     run_cmd("bwa alignment", "".join(bwa_cmd))
-    run_cmd("PICARD SortSam", "".join(sort_index_cmd))
+    run_cmd("samtools sort", "".join(sort_index_cmd))
     return bwa_cmd+"\n"+sort_index_cmd
 
 markdup_cmd_script ="""

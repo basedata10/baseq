@@ -43,7 +43,11 @@ refGene,esp6500siv2_all,1000g2015aug_all,1000g2015aug_eas,exac03,avsnp147,dbnsfp
 
 def run_annovar(filtervcf,annovarfile,name,genome,run=True):
     annovar = get_config("Annovar","annovar")
-    ref = get_config("Annovar","annovar_db_hg38")
+    if genome == "hg38":
+        ref = get_config("Annovar","annovar_db_hg38")
+    elif genome in ["hg37","hg19"]:
+        ref = get_config("Annovar","annovar_db_hg19")
+        genome = "hg19"
     annovar_cmd = annovar_cmd_script.format(annovar=annovar, filtervcf=filtervcf, annovarfile=annovarfile, ref_annovar=ref, name=name,genome=genome)
     if run:
         run_cmd("convert vcf file to aninput format","".join(annovar_cmd))

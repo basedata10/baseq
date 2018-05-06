@@ -1,3 +1,0 @@
-"""
-Estimate the Duplicaition Ratios...
-"""

@@ -1,32 +1,20 @@
-import os, sys, time
-from baseq.bam import BAMFILE
-from baseq.bed import BEDFILE
-from multiprocessing.pool import ThreadPool
-
-def mean_depth_in_bedfiles(bam, bed, number=500):
-    intervals = bed.sampling(number)
-    pool = ThreadPool(processes=10)
-    results = []
-    for interval in intervals:
-        results.append(pool.apply_async(bam.bin_mean_depth, (interval[0][3:], interval[1], interval[2])))
-    pool.close()
-    pool.join()
-    region_depth = [r.get() for r in results]
-    return region_depth
-
-def enrich_quality(bampath, bedfile, outpath):
-    bam = BAMFILE(bampath)
-    bed = BEDFILE(bedfile)
-
-    #get bases in the region
-    region_mean_depth = mean_depth_in_bedfiles(bam, bed)
-    region_size = bed.length
-    region_bases = region_mean_depth * region_size
-
-    #get bases in the whole genome
-    bam.bam_stats()
-    bam.match_length()
-    total_bases = bam.mapped_reads * bam.match_length
-
-    #10X 30X 50X 100X ratio
-    
+def quality_of_enrich_sample(samplename, bampath, intervals):
+    from baseq.bam.bamtype import BAMTYPE
+    bam = BAMTYPE(bampath, bedfile=intervals)
+    bam.stats_bases()
+    bam.stats_duplicates()
+    bam.stats_regions()
+    bam.stats_region_coverage(1000)
+    stats = {
+        "Sample" : samplename,
+        "Total" : bam.reads_total,
+        "Mapped" : bam.reads_mapped,
+        "Map_Ratio" : bam.mapping_ratio,
+        "Dup_ratio" : bam.dup_ratio,
+        "Mean_Depth": bam.mean_depth,
+        "PCT_10X" :  bam.pct_10X,
+        "PCT_30X": bam.pct_30X,
+        "PCT_50X": bam.pct_50X,
+        "PCT_100X": bam.pct_100X,
+    }
+    return stats

@@ -1,7 +1,7 @@
 import subprocess, re, os
 from baseq.utils.runcommand import run_it, run_generator
 import pandas as pd
-
+import random
 """
 baseq dev bed ./bed
 """
@@ -14,9 +14,8 @@ def cli():
 
 class BEDFILE:
     def __init__(self, path):
-        self.bed = pd.read_table(path, usecols=range(3), names=['chr', 'start', 'end'])
+        self.bed = pd.read_table(path, usecols=range(3), names=['chr', 'start', 'end'], comment='@', converters={'chr':str})
         self.stats()
-        self.sampling(100)
 
     def stats(self):
         lengths = []
@@ -31,5 +30,10 @@ class BEDFILE:
         df_s = self.bed.sample(n=numbers)
         return df_s.values.tolist()
 
-    def merge(self):
-        pass
+    def sample_split_files(self, lines=100, files=10):
+        paths = []
+        for x in range(files):
+            path = "sample.{}.bed".format(x)
+            paths.append(path)
+            self.bed.sample(n=lines).to_csv(path, index=False, sep="\t", header=False)
+        return paths

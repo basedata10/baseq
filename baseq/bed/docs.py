@@ -8,7 +8,7 @@ baseq dev bed ./bed
 
 class BEDFILE:
     def __init__(self, path):
-        self.bed = pd.read_table(path, usecols=range(3), names=['chr', 'start', 'end'])
+        self.bed = pd.read_table(path, usecols=range(3), names=['chr', 'start', 'end'], comment='#')
         self.stats()
         self.sampling(100)
 

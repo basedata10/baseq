@@ -47,17 +47,25 @@ bqsr_cmd_script = """
 {gatk} BaseRecalibrator -R {index} -L {interval} -I {markedbam} --known-sites {dbsnp} --known-sites {snp} --known-sites {indel} -O {markedbam}.table
 {gatk} ApplyBQSR -R {index} -L {interval} -I {markedbam} -bqsr {markedbam}.table -O {bqsrbam}
 """
-def bqsr(markedbam,bqsrbam,genome,run=True):
+bqsr_cmd_script_DRF = """
+{gatk} BaseRecalibrator -R {index} -L {interval} -I {markedbam} --known-sites {dbsnp} --known-sites {snp} --known-sites {indel} --disable-read-filter NotDuplicateReadFilter -O {markedbam}.table
+{gatk} ApplyBQSR -R {index} -L {interval} -I {markedbam} -bqsr {markedbam}.table --disable-read-filter NotDuplicateReadFilter -O {bqsrbam}
+"""
+def bqsr(markedbam, bqsrbam, genome, disable_dup_filter=False):
     gatk = get_config("SNV", "GATK")
     index = get_config("SNV_ref_"+genome,"bwa_index")
     DBSNP = get_config("SNV_ref_"+genome,"DBSNP")
     SNP = get_config("SNV_ref_"+genome,"SNP")
     INDEL = get_config("SNV_ref_"+genome,"INDEL")
     interval = get_config("SNV_ref_"+genome,"interval")
-    bqsr_cmd = bqsr_cmd_script.format(gatk=gatk,index=index,interval=interval,markedbam=markedbam,bqsrbam=bqsrbam,dbsnp=DBSNP,snp=SNP,indel=INDEL)
-    if run:
-        run_cmd("BaseRecalibrator","".join(bqsr_cmd))
-    return bqsr_cmd
+
+    if not disable_dup_filter:
+        bqsr_cmd = bqsr_cmd_script.format(gatk=gatk, index=index, interval=interval, markedbam=markedbam,
+                                          bqsrbam=bqsrbam, dbsnp=DBSNP, snp=SNP, indel=INDEL)
+    else:
+        bqsr_cmd = bqsr_cmd_script_DRF.format(gatk=gatk, index=index, interval=interval, markedbam=markedbam,
+                                          bqsrbam=bqsrbam, dbsnp=DBSNP, snp=SNP, indel=INDEL)
+    run_cmd("BaseRecalibrator","".join(bqsr_cmd))
 
 callvar_cmd_script = """
 {gatk} --java-options "-Xmx4g" HaplotypeCaller -R {index} -L {interval} -I {bqsrbam} -O {rawvcf} -bamout bamout.bam --native-pair-hmm-threads 20
@@ -75,7 +83,6 @@ selectvar_cmd_script = """
 {gatk} SelectVariants -R {index} -V {rawvcf} --select-type-to-include SNP -O {selectvcf}
 {gatk} VariantFiltration -R {index} -V {selectvcf} -O {filtervcf} --filter-expression "QD < 2.0 || FS > 60.0 || MQ < 40.0" --filter-name "my_snp_filter"
 """
-
 
 def selectvar(rawvcf,selectvcf,filtervcf,genome,run=True):
     GATK = get_config("SNV", "GATK")

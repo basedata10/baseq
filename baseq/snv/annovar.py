@@ -40,6 +40,7 @@ annovar_cmd_script = """
 refGene,esp6500siv2_all,1000g2015aug_all,1000g2015aug_eas,exac03,avsnp147,dbnsfp30a,clinvar_20170130,cosmic70,dbscsnv11,cytoBand \
 -operation g,f,f,f,f,f,f,f,f,f,r -nastring . -csvout
 """
+
 def run_annovar(filtervcf,annovarfile,name,genome,run=True):
     annovar = get_config("Annovar","annovar")
     ref = get_config("Annovar","annovar_db_hg38")
@@ -47,4 +48,3 @@ def run_annovar(filtervcf,annovarfile,name,genome,run=True):
     if run:
         run_cmd("convert vcf file to aninput format","".join(annovar_cmd))
     return annovar_cmd
-

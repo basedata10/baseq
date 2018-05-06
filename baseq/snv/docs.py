@@ -23,4 +23,7 @@ baseq-SNV run_annovar -g hg38 -n Test -f Test.filtered.snp.vcf -a Test.snps.avin
 
 #run gatk pipeline
 baseq-SNV run_gatkpipe -1 Read1M.P457.1.fq.gz -2 Read1M.P457.2.fq.gz -n Test -g hg38 -d ./ 
+
+#run gatk pipeline from bam file
+baseq-SNV run_gatkpipe -m 
 """

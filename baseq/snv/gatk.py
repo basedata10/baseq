@@ -87,3 +87,4 @@ def selectvar(rawvcf,selectvcf,filtervcf,genome,run=True):
 
 def check_bam_file():
     pass
+

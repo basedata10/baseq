@@ -1,19 +1,16 @@
-import sys, os, time, re
 from subprocess import Popen, PIPE, call
 from baseq.mgt import get_config, run_cmd
+import pandas as pd
 
 def bin_counting(genome, bamfile, out):
-
     import bisect
-    from .files import dynamicbin_reader
 
     dynamic_bin = get_config("CNV_ref_"+genome, "dynamic_bin")
+    df_bin = pd.read_table(dynamic_bin, sep="\t")
 
-    df_dynamicbin = dynamicbin_reader(dynamic_bin)
-
-    chrs = df_dynamicbin["chr"].tolist()
-    start = df_dynamicbin["start"].tolist()
-    end = df_dynamicbin["end"].tolist()
+    chrs = df_bin["chr"].tolist()
+    start = df_bin["start"].tolist()
+    end = df_bin["end"].tolist()
 
     #Build region position for each chromosome...
     chr_bin_starts = {}
@@ -59,7 +56,6 @@ def bin_counting(genome, bamfile, out):
             idx = chr_bin_idx[chr][idx_chr]
             counts[idx] += 1
 
-    df_dynamicbin["counts"] = counts
-    print("[info] Save the bin count file to {}".format(out))
-    # save the count file ...
-    df_dynamicbin['counts'].to_csv(out, header=True, sep="\t")
+    df_bin["counts"] = counts
+    print("[info] Bin Count File: {}".format(out))
+    df_bin['counts'].to_csv(out, header=True, sep="\t")

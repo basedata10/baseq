@@ -19,11 +19,12 @@ def qc_enrich(bamlist, bampath, intervals, name):
     print("[info] {} Bam files".format(len(bams)))
     results = []
     import multiprocessing as mp
-    pool = mp.Pool(processes = 3)
+    pool = mp.Pool(processes = 5)
     for bam in bams:
         results.append(pool.apply_async(quality_of_enrich_sample, (bam[0], bam[1], intervals)))
     pool.close()
     pool.join()
+
     results = [x.get() for x in results]
     df = pd.DataFrame(results, columns=["Sample", "Total", "Mapped", "Map_Ratio", "Dup_ratio", "Mean_Depth", "PCT_10X", "PCT_30X", "PCT_50X", "PCT_100X"])
     print("[info] Write QC Infos to {}".format("QC.xls"))

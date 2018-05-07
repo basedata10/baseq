@@ -34,7 +34,7 @@ class sectionManager:
 
     def get(self, key):
         if key in self.keys:
-            print("[info] [{}] {} : {}".format(self.name, key, self.data[key]))
+            print("[info] {}=>{}:{}".format(self.name, key, self.data[key]))
             return self.data[key]
         else:
             sys.exit("[error] '{}' is not configured in [{}]. \n[error] Please add the item in '{}'.".format(key, self.name, self.config.file))

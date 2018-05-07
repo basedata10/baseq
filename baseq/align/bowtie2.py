@@ -1,43 +1,29 @@
+from baseq.mgt import get_config, run_cmd
 
-star_script = """
-mkdir ${workdir}
-cd ${workdir}
-${bowtie2} -x ${bowtie2_index} -1 ${fq1} -2 ${fq2} --no-unal -p 20 -t -S bt2.sample.sam
-${samtools} sort -n -@ 10 ${name}_Aligned.out.bam -o ${name}.sort.bam
-rm bt2.sample.sam
-"""
+def bowtie2_sort(fq1, fq2, bamfile, genome, reads=5*1000*1000, thread=8):
+    bowtie2 = get_config("CNV", "bowtie2")
+    bowtie2_ref = get_config("CNV_ref_"+genome, "bowtie2_index")
+    samtools = get_config("CNV", "samtools")
 
-import os
-from baseq.mgt.config import get_config
-from string import Template
+    samfile = bamfile+".sam"
+    bamfile = bamfile
+    statsfile = bamfile+".stat"
 
-def genrate_bowtie_script(bowtie2, bowtie2_index, samtools, fq1, fq2, sample, workdir):
+    print("[info] Bamfile Path : {}".format(bamfile))
 
-    if not os.path.exists(workdir):
-        os.mkdir(workdir)
+    #Run Bowtie
+    if fq1 and fq2:
+        bowtie_cmd = [bowtie2, '-p', str(thread), '-x', bowtie2_ref, '-u', str(reads), '-1', fq1, '-2', fq2, '>', samfile]
+    else:
+        bowtie_cmd = [bowtie2, '-p', str(thread), '-x', bowtie2_ref, '-u', str(reads), '-U', fq1, '>', samfile]
+    run_cmd("bowtie alignment", " ".join(bowtie_cmd))
 
-    def work_script(name, file):
-        return Template(star_script).substitute(
-            bowtie2 = bowtie2,
-            bowtie2_index = bowtie2_index,
-            samtools = samtools,
-            workdir = workdir,
-            name = name,
-            file = os.path.abspath(file)
-        )
+    #run Samtools
+    samtools_sort = [samtools, 'sort -@ ', str(thread), '-o', bamfile, samfile, ";", samtools, "index", bamfile, "; rm", samfile]
+    run_cmd("samtools sort", " ".join(samtools_sort))
 
-    from itertools import product
-    barcode_prefix = [x[0] + x[1] for x in list(product('ATCG', repeat=2))]
-    bash_files = []
+    #run flagstats
+    cmd_stats = [samtools, "flagstat", bamfile, ">", statsfile]
+    run_cmd("samtools stats", " ".join(cmd_stats))
 
-    for base in barcode_prefix:
-        fastq = os.path.join("", "split.{}.{}.fq".format(sample, base))
-        script = work_script(base, fastq)
-        bash_path = os.path.join(workdir, "work_star_{}.sh".format(base))
-        bash_files.append(bash_path)
-        with open(bash_path, 'w') as file:
-            file.writelines(script)
-
-    from baseq.utils.workscript import write_bash, write_bash_qsub
-    write_bash("./", bash_files, "work.align.sh")
-    write_bash_qsub("./", bash_files, "work.qsub.align.sh")
+    return bamfile

@@ -6,5 +6,6 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 def cli():
     pass
 
-from .cmd import *
-from .qc.cmd import *
+from baseq.snv.cmd import *
+from baseq.snv.qc.cmd import *
+from baseq.snv.vcf.cmd import *

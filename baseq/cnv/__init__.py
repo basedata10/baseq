@@ -25,20 +25,24 @@ def run_pipeline(sample_file, fq1, fq2, genome):
     pass
 
 #Run BOWTIE2 Alignment
-@cli.command(short_help="Alignment with bowtie2, get sorted bam")
-@click.argument("fastq")
-@click.option('--genome', '-g', default='hg19', help="genome version name, like: hg19")
-def alignment(fastq, genome):
-    from .alignment import bowtie2_sort_alignment
-    bowtie2_sort_alignment(fastq, genome)
+@cli.command(short_help="Alignment with bowtie2, Sorted and Index")
+@click.option('--fq1', '-1', default='', help="Fastq 1")
+@click.option('--fq2', '-2', default='', help="Fastq 2")
+@click.option('--bamfile', '-o', default='Bowtie2.sort.bam', help="Output bamfile name (Bowtie2.sort.bam)")
+@click.option('--reads', '-r', default='5000000', help="Numbers of reads")
+@click.option('--thread', '-t', default=8, help="Numbers of Thread")
+@click.option('--genome', '-g', default='hg19', help="Genome version : hg19/mm38")
+def align(fq1, fq2, bamfile, genome, reads, thread):
+    from baseq.align.bowtie2 import bowtie2_sort
+    bowtie2_sort(fq1, fq2, bamfile, genome, reads=reads, thread=thread)
 
-#Run Bin Counting
+#Bin Counting
 @cli.command(short_help="Couting reads in the bam file according to dynamic bins")
-@click.option('--genome', '-g', default='hg19', help="genome version name, like: hg19")
-@click.option('--bamfile', '-i', default='', help="bam file path")
+@click.option('--genome', '-g', default='hg19', help="Genome ID, like: hg19")
+@click.option('--bamfile', '-i', default='', help="Bamfile path")
 @click.option('--out', '-o', default='./sample.bincounts.txt', help="bin counts file path")
-def bincounting(genome, bamfile, out):
-    from .bincount import bin_counting
+def bincount(genome, bamfile, out):
+    from baseq.cnv.bincount import bin_counting
     bin_counting(genome, bamfile, out)
 
 #Run Normalize
@@ -47,8 +51,8 @@ def bincounting(genome, bamfile, out):
 @click.option('--bincount', '-i', default='', help="bin count file")
 @click.option('--out', '-o', default="./sample.norm_GC.txt", help="normalized bin counts")
 def normalize(genome, bincount, out):
-    from .normalize import Normalize_GC
-    Normalize_GC(genome, bincount, out)
+    from baseq.cnv.normalize import Normalize_GC_py
+    Normalize_GC_py(genome, bincount, out)
 
 #Run QC
 @cli.command(short_help="Normalize the reads to Depth and GC content")
@@ -56,8 +60,8 @@ def normalize(genome, bincount, out):
 @click.option('--bincount', '-i', default='', help="bin count file")
 @click.option('--out', '-o', default="./sample.norm_GC.txt", help="normalized bin counts")
 def run_quality_control(genome, bincount, out):
-    from .normalize import Normalize_GC
-    Normalize_GC(genome, bincount, out)
+    from .normalize import Normalize_GC_py
+    Normalize_GC_py(genome, bincount, out)
 
 #Run CBS
 @cli.command(short_help="Run CBS ...")

@@ -17,20 +17,21 @@ lowess_gc <- function(jtkx, jtky) {
 }
 
 df = read.table(path_bin_counts)
-df_GC = read.table(path_GC, header = F)
+df_GC = read.table(path_GC, header = T)
 df = cbind(df_GC, df)
 df$counts_norm_length = df$counts/df[,6]
 df$raw_count = df$counts_norm_length/mean(df$counts_norm_length)
 
 #Aggregate the bin counts: 50kb-->500kb
+print(df[1:10,])
 df$id = as.integer(1:dim(df)[1]/10)
 df_500kb = ddply(df, .(id), summarize, 
-                 chr=V1[1],
-                 pos=V2[1],
-                 abspos=median(V3), 
-                 GC = mean(V7), 
-                 norm_count=median(raw_count)
-                 )
+                 chr=chr[1],
+                 pos=start[1],
+                 abspos=median(absstart),
+                 GC = mean(GC),
+                 norm_count=median(counts)
+             )
 
 #GC Figures
 figurefile = "./GC_counts.png"
@@ -49,15 +50,15 @@ print(path_out)
 options(digits=3)
 write.csv(df_500kb[,c(2,3,4,6)], path_out)
 
-#Plot CNV...
-figurefile = "./CNV_plot.png"
-CairoPNG(figurefile, width=1000, height=300)
-p2 = ggplot(df_500kb, aes(pos, GC))+
-  geom_point(size=0.3)+
-  ylim(0, 8)+
-  theme_bw()
-print(p2)
-dev.off()
+# #Plot CNV...
+# figurefile = "./CNV_plot.png"
+# CairoPNG(figurefile, width=1000, height=300)
+# p2 = ggplot(df_500kb, aes(pos, GC))+
+#   geom_point(size=0.3)+
+#   ylim(0, 8)+
+#   theme_bw()
+# print(p2)
+# dev.off()
 
 
 

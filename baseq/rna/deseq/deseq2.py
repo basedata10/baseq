@@ -2,8 +2,9 @@ from subprocess import call
 from baseq.setting import r_script_dir
 import os, sys, json
 from baseq.mgt import get_config, run_cmd
+import pandas as pd
 
-def deseq2(tpmfile, countfile, groupfile, comparefile, outpath):
+def deseq2(config, tpmfile, countfile, groupfile, comparefile, outpath):
     """ Run DNACopy.R file ...
     input:
         tmp file
@@ -15,19 +16,25 @@ def deseq2(tpmfile, countfile, groupfile, comparefile, outpath):
         output path
     output:
         under the output path, for each
-
     """
+    print(config, "XXXXXX")
+    if config:
+        df_cfg = pd.read_excel(config, sheet_name=["sample", "compare"])
+        print(df_cfg["sample"])
+        print(df_cfg["compare"])
+        #write the sample file and group compare file ...
+
     Rscript = get_config("RNA", "deseq")
     script = os.path.join(r_script_dir, "DESeq2.R")
     cmd = "{} {} {} {} {} {} {}".format(Rscript, script, tpmfile, countfile, groupfile, comparefile, outpath)
+
     if not os.path.exists(outpath):
         os.mkdir(outpath)
         print("[info] Create OutDir {}".format(outpath))
     try:
-        run_cmd("Haha...", cmd)
+        run_cmd("DESeq2", cmd)
     except:
         sys.exit("[error] Failed to run the Normalize Rscript ...")
-
 
 def pack_DeSeq2_result(groupfile, comparefile, outpath):
     import pandas as pd

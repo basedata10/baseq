@@ -52,7 +52,7 @@ def run_star(sample_file, fq1, fq2, genome, outdir):
 @cli.command(short_help="Aggregate TPM and Counts and QC Tables for multiple samples")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
 @click.option('--processdir', '-d', default='./', help="Combine all the TPMs under the folder")
-@click.option('--name', '-n', default='sample', help="Outpath")
+@click.option('--name', '-n', default='sample', help="Name of Analysis")
 def aggr_TPM_QC(processdir, sample_file, name):
     from .salmon import build_tpm_table
     build_tpm_table(processdir, sample_file, name)
@@ -65,8 +65,6 @@ def aggr_FPKM_QC(processdir, sample_file, outpath):
     from .hisat import build_FPKM_table
     print("[info] Aggregate FPKM into {}".format(outpath))
     build_FPKM_table(processdir, sample_file, outpath)
-
-
 
 @cli.command(short_help="plot tpm correlation figure between samples")
 @click.option('--name1', '-1', default='', help="sample name")
@@ -104,3 +102,4 @@ def diff_power_analysis(table, group, comparefile, qcfile, name):
 
 from .table.cmd import *
 from .deseq.cmd import *
+from .gtf.cmd import *

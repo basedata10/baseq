@@ -37,7 +37,8 @@ setup(
         'matplotlib',
         'jinja2',
         'click',
-        'configparser'
+        'configparser',
+        'peakutils'
     ],
 
     extras_require={

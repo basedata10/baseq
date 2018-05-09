@@ -1,4 +1,3 @@
-from subprocess import call
 from baseq.setting import r_script_dir
 import os, sys
 from baseq.mgt import get_config, run_cmd

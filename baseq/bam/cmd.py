@@ -24,3 +24,14 @@ def infos(bam, bed, regions):
 @click.option('--species', '-s', default='human', help='Species: human, mouse, zebrafish')
 def split_reads_not_in_region(path, species):
     print('RNA-Seq')
+
+@cli.command(short_help="Samtools Sort")
+@click.option('--thread', '-t', default='8', help='Thread')
+@click.argument('in_bam')
+@click.argument('out_bam')
+
+def sort_bam(in_bam, thread, out_bam):
+    print("[info] The sorted bam will be: {}".format(out_bam))
+    cmd = "samtools sort -@ {} {} -o{}; samtools index {}".format(thread, in_bam, out_bam, out_bam)
+    from baseq.mgt.command import run_cmd
+    run_cmd("SortBam", cmd)

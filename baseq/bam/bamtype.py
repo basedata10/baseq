@@ -40,8 +40,9 @@ class BAMTYPE:
         lines = run_it(cmd)
         return lines
 
-    def region_depth(self, chr, start, end):
+    def region_depth(self, chr, start, end, all=False):
         chr = str(chr)
+        depth = []
         if chr in self.chrs:
             chr_real = chr
         elif chr.startswith("chr") and chr[3:] in self.chrs:
@@ -49,8 +50,10 @@ class BAMTYPE:
         else:
             print("[error] {} not exist in genome".format(chr))
             return []
-        results = run_generator("samtools depth -r {}:{}-{} {}".format(chr_real, start, end, self.path))
-        depth = []
+        if all:
+            results = run_generator("samtools depth -a -r {}:{}-{} {}".format(chr_real, start, end, self.path))
+        else:
+            results = run_generator("samtools depth -r {}:{}-{} {}".format(chr_real, start, end, self.path))
         for line in results:
             depth.append(int(line.split()[2]))
         return depth

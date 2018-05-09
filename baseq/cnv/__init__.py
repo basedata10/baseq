@@ -34,6 +34,8 @@ def run_pipeline(sample_file, fq1, fq2, genome):
 @click.option('--genome', '-g', default='hg19', help="Genome version : hg19/mm38")
 def align(fq1, fq2, bamfile, genome, reads, thread):
     from baseq.align.bowtie2 import bowtie2_sort
+    from baseq.mgt.config import get_config
+    genome = get_config("CNV_ref_"+genome, "bowtie2_index")
     bowtie2_sort(fq1, fq2, bamfile, genome, reads=reads, thread=thread)
 
 #Bin Counting
@@ -67,18 +69,22 @@ def run_quality_control(genome, bincount, out):
 @cli.command(short_help="Run CBS ...")
 @click.option('--count_file', '-i', default='', help="Normalized bin count file")
 @click.option('--out', '-o', default='./', help="CBS file...")
-def run_CBS(count_file, out):
-    from .segmentation import bin_segmentation
+def CBS(count_file, out):
+    from .segment import bin_segmentation
     bin_segmentation(count_file, out)
 
 #Run Plot Genomes...
 @cli.command(short_help="Run CBS ...")
-@click.option('--count_file', '-i', default='', help="Normalized bin count file")
-@click.option('--cbs_file', '-c', default='', help="CBS File, Genrated from run_CBS command")
+@click.option('--counts', '-i', default='', help="Normalized bin count file")
+@click.option('--countlists', '-l', default='', help="Normalized bin count file")
+@click.option('--cbs', '-c', default='', help="CBS File, Genrated from run_CBS command")
 @click.option('--out', '-o', default='./', help="CBS file...")
-def run_plotgenome(count_file, cbs_file, out):
-    from baseq.cnv.plots.plot_genome import plot_genome
-    plot_genome(count_file, cbs_file, out)
+def plotgenome(counts, countlists, cbs, out):
+    from baseq.cnv.plots.genome import plot_genome_py, plot_genome_multiple
+    if not countlists:
+        plot_genome_py(counts, cbs, out)
+    else:
+        plot_genome_multiple(countlists, cbs, out)
 
 #Prepare Web Datas
 @cli.command(short_help="Generating the datas for web view: baseq.io/viewcnv")

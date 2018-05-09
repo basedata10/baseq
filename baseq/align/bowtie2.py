@@ -2,7 +2,7 @@ from baseq.mgt import get_config, run_cmd
 
 def bowtie2_sort(fq1, fq2, bamfile, genome, reads=5*1000*1000, thread=8):
     bowtie2 = get_config("CNV", "bowtie2")
-    bowtie2_ref = get_config("CNV_ref_"+genome, "bowtie2_index")
+    bowtie2_ref = genome
     samtools = get_config("CNV", "samtools")
 
     samfile = bamfile+".sam"

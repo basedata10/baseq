@@ -7,6 +7,8 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 def cli():
     pass
 
+from baseq.drops.apa.cmd import *
+
 @cli.command(short_help="Main cmd for inDrop/Drop-Seq/10X")
 @click.option('--config', default="", help="config path")
 @click.option('--genome', '-g', help="human/mouse/mixed")

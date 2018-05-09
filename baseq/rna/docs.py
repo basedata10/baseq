@@ -5,7 +5,7 @@ doc = """
     #Multiple samples run 4 samples at the same time ...
     baseq-RNA run_salmon -m samples2.txt -g mm38 -d ./salmon -w local -p 4
     #Aggregate: TPM Counts and QC...
-    baseq-RNA aggr_tpm_qc -m samples.txt -d ./salmon_process -o ./salmon
+    baseq-RNA aggr_tpm_qc -m samples.txt -d ./salmon -o ANZHEN_RNA4
     
 [hisat+cufflinks]
     baseq-RNA run_hisat -m samples.txt -g hg38 -d ./hisat

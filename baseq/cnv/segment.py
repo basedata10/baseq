@@ -12,5 +12,4 @@ def bin_segmentation(infile, path_out):
         run_cmd("Normalize ", cmd)
         print("[info] Segment file write to {}".format(path_out))
     except:
-        sys.exit("[error] Failed to run the Normalize Rscript ...")
-
+        sys.exit("[error] Failed to run the CBS Rscript ...")

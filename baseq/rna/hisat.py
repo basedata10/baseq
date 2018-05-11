@@ -1,5 +1,4 @@
 import sys, os, time, re, json
-from subprocess import Popen, PIPE, call
 from baseq.mgt import get_config, run_cmd
 from baseq.fastq.sample_file import check_sample_files
 import pandas as pd
@@ -25,7 +24,6 @@ cd {0}
 {4} index hisat2_sorted.bam
 {4} flagstat hisat2_sorted.bam > flagstat.txt
 rm hisat2_align.sam hisat2_align.bam
-
 """
 
 def run_cufflinks(genome,method):
@@ -91,7 +89,6 @@ def run_multiple_hisat(path, genome, outdir):
         file.writelines("\n".join(["qsub -cwd -l vf=8g,p=8 " + x for x in script_lists]))
     print("[info] Main script written in {}".format(script_main_path))
 
-
 # Build FPKM and QC ...
 def build_FPKM_table(processdir, samplefile, outpath):
     samples = check_sample_files(samplefile)
@@ -145,10 +142,6 @@ def build_FPKM_table(processdir, samplefile, outpath):
     qc_file.writelines("\n".join(qc))
     qc_file.close()
 
-
 def run_featureCounts():
-
-
-
     pass
 

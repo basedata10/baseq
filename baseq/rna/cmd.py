@@ -6,21 +6,19 @@ def doc():
     from .docs import print_doc
     print_doc()
 
-#Run the CNV pipeline for Lists of Samples
 @cli.command(short_help="salmon quatification")
 @click.option('--sample_file', '-m', default='', help="Tab seprated file: name, fq1, fq2")
 @click.option('--genome', '-g', default='hg38', help="Species hg19 or mm10/mm38")
-@click.option('--workmode', '-w', default='local', help="qsub/local")
-@click.option('--parallel', '-p', default='2', help="How many runs at the same time...")
+@click.option('--name', '-n', default='RNA', help="Name of The Process (RNA)")
+@click.option('--parallel', '-p', default='6', help="How many runs at the same time...")
 @click.option('--fq1', '-1', default='', help="Fastq 1")
 @click.option('--fq2', '-2', default='', help="Fastq 2")
-@click.option('--outdir', '-d', default='', help="The scripts and output path")
-def run_salmon(sample_file, fq1, fq2, genome, outdir, workmode, parallel):
+def run_salmon(sample_file, fq1, fq2, genome, name, parallel):
     from .salmon import run_salmon, run_multiple_salmons
     if sample_file:
-        run_multiple_salmons(sample_file, genome, outdir, workmode, parallel)
+        run_multiple_salmons(sample_file, genome, name, parallel)
     else:
-        run_salmon(fq1, fq2, genome, outdir)
+        run_salmon(fq1, fq2, genome, name)
 
 #run hisat, samtools and cufflinks
 @cli.command(short_help="hisat alignment and cufflinks quatification")
@@ -30,7 +28,7 @@ def run_salmon(sample_file, fq1, fq2, genome, outdir, workmode, parallel):
 @click.option('--fq2', '-2', default='', help="Fastq 2")
 @click.option('--outdir', '-d', default='', help="The scripts and output path")
 def run_hisat(sample_file, fq1, fq2, genome, outdir):
-    from .hisat import run_hisat, run_multiple_hisat
+    from baseq.rna.hisat import run_hisat, run_multiple_hisat
     if sample_file:
         run_multiple_hisat(sample_file, genome, outdir)
     else:
@@ -43,7 +41,7 @@ def run_hisat(sample_file, fq1, fq2, genome, outdir):
 @click.option('--fq2', '-2', default='', help="Fastq 2")
 @click.option('--outdir', '-d', default='', help="The scripts and output path")
 def run_star(sample_file, fq1, fq2, genome, outdir):
-    from .star import run_star, run_multiple_star
+    from baseq.rna.star import run_star, run_multiple_star
     if sample_file:
         run_multiple_star(sample_file, genome, outdir)
     else:

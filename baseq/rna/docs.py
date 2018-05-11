@@ -2,8 +2,10 @@ doc = """
 [Salmon]
     #Single sample:
     baseq-RNA run_salmon -1 HMC_01.1.fq.gz -2 HMC_01.2.fq.gz -g hg38
+    
     #Multiple samples run 4 samples at the same time ...
-    baseq-RNA run_salmon -m samples2.txt -g mm38 -d ./salmon -w local -p 4
+    baseq-RNA run_salmon -m samples.txt -g hg38 -n RNA
+    
     #Aggregate: TPM Counts and QC...
     baseq-RNA aggr_tpm_qc -m samples.txt -d ./salmon -o ANZHEN_RNA4
     

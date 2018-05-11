@@ -1,4 +1,4 @@
-import re, os, time
+import re, os, time, sys
 import numpy as np
 from jinja2 import Template
 from baseq.utils.runcommand import run_it, run_generator
@@ -14,6 +14,8 @@ region_length/region_mean_depth/region_total_bases/
 
 class BAMTYPE:
     def __init__(self, path, bedfile=""):
+        if not os.path.exists(path):
+            sys.exit("[error] Bam File {} Not Exists".format(path))
         lines = run_it("samtools view -H {}".format(path))
         #get the bam header
         header = [re.split("\t|:", x) for x in lines]
@@ -49,7 +51,6 @@ class BAMTYPE:
             chr_real = chr[3:]
         else:
             print("[error] {} not exist in genome".format(chr))
-            return []
         if all:
             results = run_generator("samtools depth -a -r {}:{}-{} {}".format(chr_real, start, end, self.path))
         else:
@@ -133,8 +134,21 @@ class BAMTYPE:
         self.pct_30X = round(sum([1 for x in depth_flat if x>=30])/total_bases, 3)
         self.pct_50X = round(sum([1 for x in depth_flat if x>=50])/total_bases, 3)
         self.pct_100X = round(sum([1 for x in depth_flat if x>=100])/total_bases, 3)
-
         print("[info] StatBases {}, Mean {}, 10X {}, 30X {}, 50X {}, 100X {}".format(total_bases, self.mean_depth, self.pct_10X, self.pct_30X, self.pct_50X, self.pct_100X))
 
-    def bam_read_counts(self, bam, chr, star, end):
+    def get_reads(self, chr, start, end):
+        print(chr, start, end)
+        chr = str(chr)
+        if chr in self.chrs:
+            chr_real = chr
+        elif chr.startswith("chr") and chr[3:] in self.chrs:
+            chr_real = chr[3:]
+        results = run_generator("samtools view {} {}:{}-{}".format(self.path, chr_real, start, end))
+        datas = []
+        for x in results:
+            lines = x.split()
+            datas.append(lines[0:6])
+        return datas
+
+    def bam_read_counts(self, chr, star, end):
         pass

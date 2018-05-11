@@ -1,7 +1,8 @@
 import os, sys
 import pandas as pd
 import numpy as np
-from baseq.utils.file_reader import read_file_by_lines
+from time import time
+from baseq.utils.file_reader import read_filelines
 from baseq.drops.barcode_count import cut_seq_barcode
 
 from itertools import product
@@ -34,15 +35,11 @@ def getUMI(protocol, barcode, seq1, mutate_last_base):
         UMI = seq1[len(barcode) + 22:len(barcode) + 22 + 6]
     return UMI
 
-from time import time
-def barcode_split(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
+def barcode_split(name, protocol, bcstats, fq1, fq2, dir, size, skip):
+    print("[info] SPLIT!!! {}".format(name))
     #barcode infos
     barcode_corrected = {}
     barcode_mutate_last = []
-
-    #read barcode stats...
-    #build barcode correction table...
-    #build barcode_mutate_last list...
     bc_stats = pd.read_csv(bcstats)
     bc_stats = bc_stats.replace(np.nan, '', regex=True)
     for index, row in bc_stats.iterrows():
@@ -58,8 +55,8 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
 
     #make buffers and file...
     files, buffers = open_splited_files(dir, name)
-    fq1 = read_file_by_lines(fq1, topreads * 1000 * 1000, 4)
-    fq2 = read_file_by_lines(fq2, topreads * 1000 * 1000, 4)
+    fq1 = read_filelines(fq1, size, 4, skip)
+    fq2 = read_filelines(fq2, size, 4, skip)
 
     counter = 0
     start = time()
@@ -70,6 +67,7 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
         if counter % 1000000 == 0:
             print("[info] Processed {}M lines in {}s".format(counter/1000000, round(time()-start, 2)))
             start = time()
+
         if counter % 100000 == 0:
             for key in buffers:
                 files[key].writelines("\n".join(buffers[key])+"\n")
@@ -92,7 +90,7 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
             UMI = getUMI(protocol, barcode, seq1, 0)
 
         #build new header
-        header = "_".join(['@', bc_corrected, UMI, str(counter)])
+        header = "_".join(['@', bc_corrected, UMI, str(counter+skip)])
         seq = read2[1].strip()
         quality = read2[3].strip()
         buffers[bc_prefix].append("\n".join([header, seq, "+", quality]))
@@ -100,3 +98,27 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
     for key in buffers:
         files[key].writelines("\n".join(buffers[key])+"\n")
         files[key].close()
+    return 1
+
+def barcode_splits_all(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir):
+    import multiprocessing as mp
+    pool = mp.Pool(processes=10)
+    results = []
+    size = 10 * 1000 * 1000
+    names = []
+    for x in range(18):
+        skip = x * size
+        name2 = "{}_{}".format(name, x)
+        names.append(name2)
+        results.append(pool.apply_async(barcode_split, [name2, protocol, bcstats, fq1, fq2, dir, size, skip]))
+    pool.close()
+    pool.join()
+    [x.get() for x in results]
+    #combine file...
+    bases = [x+y for x in "ATCG" for y in "ATCG"]
+    for base in bases:
+        files = [os.path.join(dir, "split.{}.{}.fq".format(name, base)) for name in names]
+        files = " ".join(files)
+        merged_file = os.path.join(dir, "split.{}.{}.fq".format(name, base))
+        cmd = "cat {} > {}".format(files, merged_file)
+        print(cmd)

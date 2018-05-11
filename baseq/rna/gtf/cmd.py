@@ -26,6 +26,6 @@ def gtf_UTR3(genome):
     df = read_gencode(genome, "UTR")
     df = df.groupby("transc").last()
     df['length'] = df.end-df.start
-    df = df.loc[df.length>600]
+    df = df.loc[df.length>1000]
     print(df)
     return df

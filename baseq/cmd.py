@@ -1,18 +1,13 @@
 import click, os, sys
 from baseq.mgt.command import run_cmd
-
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 
 def cli():
-    #import subprocess
-    # cmd = 'eval "$(_baseq_COMPLETE=source baseq)"'
-    # subprocess.call(cmd, shell=True)
-    pass
+    print(os.getcwd())
 
 from .docs import docs
-
 
 @cli.command(short_help = "Show the status of jobs")
 def init():
@@ -86,6 +81,13 @@ def csv(command):
 def PPT():
     from baseq.utils.ppt import generate_PPT
     generate_PPT()
+
+@cli.command(short_help="PPT...")
+@click.argument("path")
+def pack(path):
+    name = os.path.basename(path)
+    run_cmd("PACK", "tar -zcvf {}.tar.gz {}".format(name, path))
+    print("[info] {}.tar.gz is generated...".format(name))
 
 @cli.command(short_help="tools for CSV files, run 'baseq csv' for help")
 @click.option('--subject', '-s', default='A Email', help='Subject')

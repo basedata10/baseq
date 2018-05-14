@@ -25,4 +25,13 @@ baseq-SNV run_gatkpipe -1 Read1M.P457.1.fq.gz -2 Read1M.P457.2.fq.gz -n Test -g 
 
 #run gatk pipeline from bam file
 baseq-SNV run_gatkpipe -m 
+
+#create PoN files
+baseq-SNV create_pon -p /mnt/gpfs/Users/wufan/p12_HEC/GATK/baseq_mutect_test/ -l /mnt/gpfs/Users/wufan/p12_HEC/GATK/28wuchen/mutect_call.txt -L /mnt/gpfs/Users/wufan/p12_HEC/GATK/28wuchen/merge.all.target.1.list -g hg37
+
+#single mutect:/mnt/gpfs/Users/wufan/p12_HEC/GATK/28wuchen/N506/
+baseq-SNV run_mutect2 -g hg37 -n N506 -N N506_marked_bqsr.bam -t T506 -T T506_marked_bqsr.bam -o ./
+
+#filter mutect call
+baseq-SNV filter_mutect_call -r /mnt/gpfs/Users/wufan/p12_HEC/GATK/resources/ref_b37/small_exac_common_3_b37.vcf.gz -s /mnt/gpfs/Users/wufan/p12_HEC/GATK/mutect_test/T506.vcf.gz -T /mnt/gpfs/Users/wufan/p12_HEC/GATK/28wuchen/T506/T506_marked_bqsr.bam -o ./ -t T506
 """

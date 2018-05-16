@@ -8,9 +8,9 @@ def HammingDistance(seq1, seq2):
 def extract_barcode(protocol, seq):
     """Extract cell barcode from reads
 
-        * 10X: seq[0:16]
-        * indrop: seq[0:i] + seq[i + 22 : i + 22 + 8] (i is length of barcode 1)
-        * dropseq: seq[0:12]
+    - 10X: seq[0:16]
+    - indrop: seq[0:i] + seq[i + 22 : i + 22 + 8] (i is length of barcode 1)
+    - dropseq: seq[0:12]
 
     :param protocol: 10X/indrop/drop-seq.
     :param seq: The sequence containing cellbarcode.

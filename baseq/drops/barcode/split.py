@@ -51,6 +51,7 @@ def split_16(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
     Return:
         The splitted reads will be write to XXXX/split.AA.fa
     """
+
     barcode_corrected = {}
     barcode_mutate_last = []
 

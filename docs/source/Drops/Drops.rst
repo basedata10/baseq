@@ -2,17 +2,23 @@
 
 .. module::baseq.drops
 
-DropSeq
-==============
+Drops:
+====================
 
-Commands
-^^^^^^^^^
-.. click:: baseq.drops.cmd:cli
-   :prog: baseq-Drop
-   :show-nested:
+Design
+-------
+The key question for Drops Pipeline design.
+
+- Split the barcode;
+- Tagging reads from genome position;
+
+Todos
+------
+
+- 尚待完成
 
 APIs
-^^^^^
+----
 
 Extract, Count barcode
 """"""""""""""""""""""

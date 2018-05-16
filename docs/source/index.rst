@@ -36,7 +36,8 @@ Develop Interfaces
    BAM
    CNV
    SNV
-   Drops
+   RNA/index
+   Drops/Drops
 
 * :ref:`modindex`
 

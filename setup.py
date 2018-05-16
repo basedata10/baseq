@@ -38,7 +38,8 @@ setup(
         'jinja2',
         'click',
         'configparser',
-        'peakutils'
+        'peakutils',
+        'sphinx-click'
     ],
 
     extras_require={

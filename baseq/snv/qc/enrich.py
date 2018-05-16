@@ -1,5 +1,16 @@
 
-def quality_of_enrich_sample(samplename, bampath, intervals):
+def enrich_qc(samplename, bampath, intervals):
+    """
+    Check the coverage depth and enrichment quality.
+
+    Usage:
+    ::
+        enrich_qc("sample01", "xx.bam", "panel.bed")
+
+    Return:
+        Sample/Total/Mapped/Map_Ratio/Dup_ratio/PCT_10X/PCT_30X/...
+    """
+
     from baseq.bam.bamtype import BAMTYPE
 
     bam = BAMTYPE(bampath, bedfile=intervals)

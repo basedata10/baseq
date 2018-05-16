@@ -1,10 +1,12 @@
 import os, sys
 import pandas as pd
 import numpy as np
-from baseq.utils.file_reader import read_file_by_lines
-from baseq.drops.barcode_count import cut_seq_barcode
 
+from time import time
+from baseq.utils.file_reader import read_file_by_lines
+from baseq.drops.barcode.count import extract_barcode
 from itertools import product
+
 barcode_prefix = [x[0]+x[1] for x in list(product('ATCG', repeat=2))]
 
 def open_splited_files(dir, name):
@@ -34,9 +36,21 @@ def getUMI(protocol, barcode, seq1, mutate_last_base):
         UMI = seq1[len(barcode) + 22:len(barcode) + 22 + 6]
     return UMI
 
-from time import time
-def barcode_split(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
-    #barcode infos
+def split_16(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
+    """
+    Barcode split into 16 files according to the valid barcode in the bcstats files.
+
+    #. Determine whether the last base mutates;
+    #. Filter by whitelist;
+
+    :param protocol: 10X/Dropseq/inDrop.
+    :param name: barcode_count.
+    :param bcstats: Valid Barcode.
+    :param output: (./bc_stats.txt)
+
+    Return:
+        The splitted reads will be write to XXXX/split.AA.fa
+    """
     barcode_corrected = {}
     barcode_mutate_last = []
 
@@ -75,7 +89,7 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, dir, topreads=10):
                 files[key].writelines("\n".join(buffers[key])+"\n")
                 buffers[key] = []
 
-        bc = cut_seq_barcode(protocol, read1[1])
+        bc = extract_barcode(protocol, read1[1])
         if bc in barcode_corrected:
             bc_corrected = barcode_corrected[bc]
         else:

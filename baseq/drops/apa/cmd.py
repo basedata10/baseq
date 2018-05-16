@@ -9,50 +9,40 @@ def apa_pipeline(dir):
     pass
 
 @cli.command(short_help="Genome position to gene name")
-@click.option('--genome', '-g', default='hg38', help="Genome:hg38...")
-@click.option('--fastq', '-f', help='Path to the Fastq File')
-@click.option('--bam', '-b', default="aligned.bam", help='Path to the bam file')
-def apa_align(fastq, genome, bam):
-    from baseq.align.bowtie2 import bowtie2_sort
-    print('[info] Aligning the reads ...')
-    index = get_config("RNA_ref_"+genome, "gencode_bowtie2")
-    bowtie2_sort(fastq, "", bam, index, 1*1000*1000)
-
-@cli.command(short_help="Genome position to gene name")
-@click.option('--genome', '-g', default='hg38', help="Genome:hg38...")
 @click.option('--bam', '-b', default="aligned.bam", help='Path to the bam file')
 @click.option('--chr', '-c', default="chr", help='Chrome')
 @click.option('--start', '-s', help='Start')
 @click.option('--end', '-e', help='End')
-def apa_scan_region(genome, bam, chr, start, end):
-    start = int(start)
-    end = int(end)
+def apa_scan_region(bam, chr, start, end):
+    """
+    Get the peaks for chrN:start-end and print the peaks
+    """
     from baseq.bam import BAMTYPE
     from baseq.drops.apa.scaner import scan
-    print('[info] Aligning the reads ...')
-    depth = BAMTYPE(bam).region_depth(chr, start, end, all=True)
-    scan(depth, start, end)
+    import pandas as pd
+    bam = BAMTYPE(bam)
+    infos = scan(bam, "sample", chr, int(start), int(end))
+    print(pd.DataFrame(infos))
 
 @cli.command(short_help="Genome position to gene name")
 @click.option('--genome', '-g', default='hg38', help="Genome:hg38...")
 @click.option('--bam', '-b', default="aligned.bam", help='Path to the bam file')
-def apa_scan_genome(genome, bam):
-    from baseq.drops.apa.scaner import scan_genome
-    scan_genome(genome, bam)
+@click.option('--name', '-n', default="", help='Name of analysis (ScanAPA)')
+def apa_scan_genome(genome, bam, name):
+    """
 
-@cli.command(short_help="Genome position to gene name")
-@click.option('--file', '-f', default='', help="APA sites")
-def apa_filter_genes_with_apa(file):
-    from baseq.drops.apa.genes import genes_with_APA
-    genes_with_APA(file)
+    """
+    from baseq.drops.apa.UTR import scan_utr
+    scan_utr(genome, bam, name)
 
-@cli.command(short_help="Genome position to gene name")
+@cli.command(short_help="APA Usage For Barcode or CellType")
 @click.option('--bamfile', '-b', default='', help="Bam File")
 @click.option('--apalist', default='', help="APA sites recovered")
+@click.option('--celltype', '-t', default='', help="Cellbarcode and the its type")
 @click.option('--gene', '-g', default='', help="APA sites")
-def apa_sample_usage(bamfile, apalist, gene):
+def apa_sample_usage(bamfile, apalist, celltype, gene):
     from baseq.drops.apa.samples import APA_usage
-    APA_usage(bamfile, apalist, gene)
+    APA_usage(bamfile, apalist, celltype, gene)
 
 @cli.command(short_help="Genome position to gene name")
 @click.option('--bamfile', '-b', default='', help="Bam File")

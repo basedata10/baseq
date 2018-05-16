@@ -8,25 +8,20 @@ import pandas as pd
 
 from baseq.drops.apa.scaner import scan
 
-def scan_genes(genome, bam, name):
-    """Example function with types documented in the docstring.
+def scan_utr(genome, bam, name):
+    """
+    For a genome, read the gencode annotationm get the logest UTR for each gene (>=1000bp)\
+    Apply the 'scan' function for each UTR (default 20 threads...)\
+    Call the peaks for each UTR.\
+    Build and Write the APA Peaks for all the genes.
 
-    Args:
-        param1 (int): The first parameter.
-        param2 (str): The second parameter.
-
-    Examples:
-        Examples should be written in doctest format, and should illustrate how
-        to use the function.
-
-    Returns:
-        bool: The return value. True for success, False otherwise.
 
     """
-
     from baseq.bam import BAMTYPE
     from baseq.rna.gtf.gencode import read_gencode
 
+    # Read Gencode And Get UTR Region (>1000bp)
+    # Sort by UTR length and get the logest by gene...
     df = read_gencode(genome, "UTR")
     df['length'] = df.end - df.start
     df = df.sort_values(by=['length'])
@@ -48,7 +43,6 @@ def scan_genes(genome, bam, name):
     df_peaks = pd.DataFrame(results, columns=["chr", "start", 'end', 'strand', 'transc',
                                               'exon', 'length', 'gene', 'pos', 'mean_depth',
                                               "mid", "left", "right", "counts"])
-
     df_peaks = df_peaks.drop(columns=["transc", 'exon'])
     file_tsv = "peaks.{}.txt".format(name)
     file_xls = "peaks.{}.xls".format(name)

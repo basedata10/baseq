@@ -17,8 +17,8 @@ def enrich_saturation(bampath, interval, outpath):
 @click.option('--genome','-g', default='', help='Species hg19 or mm10/mm38')
 @click.option('--outfile','-o', default='', help='bamfile name')
 def run_bwa(fq1, fq2, name, genome, outfile, thread):
-    from baseq.snv.gatk import run_alignment
-    run_alignment(fq1, fq2, name, genome, outfile, thread)
+    from baseq.snv.gatk import alignment
+    alignment(fq1, fq2, name, genome, outfile, thread)
     print("[info] alignment complete")
 
 @cli.command(short_help="mark duplicates")
@@ -91,7 +91,7 @@ def run_gatkpipe(config, dir, fq1, fq2, bamfile, name, genome):
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
-    from baseq.snv.gatk import run_alignment, run_markdup, run_callvar, selectvar, bqsr
+    from baseq.snv.gatk import alignment, run_markdup, run_callvar, selectvar, bqsr
     from baseq.snv.annovar import run_annovar
 
     bam_marked = os.path.join(outdir, "{}.marked.bam".format(name))
@@ -103,7 +103,7 @@ def run_gatkpipe(config, dir, fq1, fq2, bamfile, name, genome):
 
     if fq1 :
         bamfile = os.path.join(outdir, "{}.bam".format(name))
-        run_alignment(fq1, fq2, name, genome, bamfile)
+        alignment(fq1, fq2, name, genome, bamfile)
         run_markdup(bamfile, bam_marked)
     if bamfile:
         run_markdup(bamfile, bam_marked)

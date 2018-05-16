@@ -12,15 +12,30 @@ def mutate_single_base(seq):
                 mutated.append(''.join(temp))
     return mutated
 
-def barcode_correct_filter(protocol="", barcode_count="", max_cell=10000, min_reads=2000, output="./bc_stats.txt"):
+def valid_barcode(protocol="", barcode_count="", max_cell=10000, min_reads=2000, output="./bc_stats.txt"):
     """
     Aggregate the mismatch barcode, get the total_reads;
-    Determine whether the last base mutates;
-    Filter by whitelist;
-    Filter by read counts;
+
+    #. Read the barcode counts files;
+    #. Correct the barcode with 1bp mismatch;
+    #. Stats the mismatch barcode reads and sequences;
+    #. Determine wheather mutate on the last base (show A/T/C/G with similar ratio at the last base);
+    #. Filter by whitelist;
+    #. Filter by read counts (>=min_reads);
+    #. Print the number of barcode and reads retained after each steps.
+
+    :param protocol: 10X/Dropseq/inDrop.
+    :param barcode_count: barcode_count.
+    :param min_reads: Minimum number of reads for a cell.
+    :param output: Path or name of output (./bc_stats.txt)
+
+    Return:
+        Write a bc_stats.csv file which contains:
+        barcode/counts/mismatch_reads/mismatch_bc/mutate_last_base
     """
     print("[info] Stats the barcodes counts in {}".format(barcode_count))
     df = pd.read_csv(barcode_count, index_col=0).sort_values("counts", ascending=False)
+
     df["mismatch_reads"] = 0
     df["mismatch_bc"] = ""
     df["mutate_last_base"] = 0
@@ -32,7 +47,6 @@ def barcode_correct_filter(protocol="", barcode_count="", max_cell=10000, min_re
         count = df.loc[bc, 'counts']
         if count == 0 or count <= 0.25 * min_reads:
             continue
-
         bc_mis = mutate_single_base(bc)
 
         #index for these mismatches

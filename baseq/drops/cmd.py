@@ -1,13 +1,17 @@
-import click, os, sys
+import click, sys
 from baseq.fastq.sample_file import check_sample_files
 import multiprocessing as mp
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
+
 @click.group(context_settings=CONTEXT_SETTINGS)
 def cli():
+    """Run DropSeq Data Analysis
+    """
     pass
 
 from baseq.drops.apa.cmd import *
+from baseq.drops.cellranger.cmd import *
 
 @cli.command(short_help="Main cmd for inDrop/Drop-Seq/10X")
 @click.option('--config', default="", help="config path")
@@ -24,10 +28,29 @@ from baseq.drops.apa.cmd import *
 @click.option('--step', default='all', help='all/star/')
 
 def run_pipe(config, genome, protocol, cells, minreads, name, fq1, fq2, dir, top_million_reads, step, parallel):
+    """
+    Run the Total Pipeline...
+
+    #. Read the barcode counts files;
+    #. Correct the barcode with 1bp mismatch;
+    #. Stats the mismatch barcode reads and sequences;
+    #. Determine wheather mutate on the last base (show A/T/C/G with similar ratio at the last base);
+    #. Filter by whitelist;
+    #. Filter by read counts (>=min_reads);
+    #. Print the number of barcode and reads retained after each steps.
+
+    Pipeline:
+    ::
+        baseq-Drop runpipe -1 1.fq.gz -2 2.fq.gz -n test
+
+    Return:
+        XXXX
+    """
+
     print('Start Processing ...')
-    from baseq.drops.barcode_count import count_barcodes
-    from baseq.drops.barcode_stats import barcode_correct_filter
-    from baseq.drops.barcode_split import barcode_split
+    from baseq.drops.barcode.count import count_barcodes
+    from baseq.drops.barcode.stats import valid_barcode
+    from baseq.drops.barcode.split import split_16
     dir = os.path.abspath(os.path.join(dir, name))
     bc_counts = os.path.join(dir, "barcode_count_{}.csv".format(name))
     bc_stats = os.path.join(dir, "barcode_stats_{}.csv".format(name))
@@ -57,12 +80,12 @@ def run_pipe(config, genome, protocol, cells, minreads, name, fq1, fq2, dir, top
     #aggregate
     if step in ["all", "stats"]:
         print("[info] Aggregating the barcodes errors ...")
-        barcode_correct_filter(protocol, bc_counts, max_cell=cells, min_reads=minreads, output=bc_stats)
+        valid_barcode(protocol, bc_counts, max_cell=cells, min_reads=minreads, output=bc_stats)
 
     #barcode split
     if step in ["all", "split"]:
         print("[info] Split the barcode ...")
-        barcode_split(name, protocol, bc_stats, fq1, fq2, bc_splits_dir, int(top_million_reads))
+        split_16(name, protocol, bc_stats, fq1, fq2, bc_splits_dir, int(top_million_reads))
 
     #run alignment
     if step in ["all", "star"]:
@@ -114,7 +137,7 @@ def barcode_counting(name, protocol, fq1, dir):
     samples = check_sample_files("", name, fq1)
     if samples == []:
         sys.exit("[error] No valid sample, Exit.")
-    from baseq.drops.barcode_count import count_barcodes
+    from baseq.drops.barcode.count import count_barcodes
     outpath = os.path.join(dir, "barcode_count.{}.csv".format(name))
     count_barcodes(fq1, outpath, protocol, 20)
 
@@ -126,9 +149,9 @@ def barcode_counting(name, protocol, fq1, dir):
 @click.option('--dir', '-d', default='./', help='Folder of output (./)')
 def barcode_filter(name, protocol, bcfile, minreads, dir):
     print('Start Processing inDrop Results')
-    from baseq.drops.barcode_stats import barcode_correct_filter
+    from baseq.drops.barcode.stats import valid_barcode
     outpath = os.path.join(dir, "barcode_stats.{}.csv".format(name))
-    barcode_correct_filter(protocol = protocol, barcode_count=bcfile, min_reads=int(minreads), output=outpath)
+    valid_barcode(protocol = protocol, barcode_count=bcfile, min_reads=int(minreads), output=outpath)
 
 @cli.command(short_help="Split Barcode")
 @click.option('--name', '-n', default='sample', help="sample name")
@@ -140,9 +163,9 @@ def barcode_filter(name, protocol, bcfile, minreads, dir):
 @click.option('--maxcell', default=10000, help='Max cell number')
 @click.option('--dir', '-d', default='./', help='Folder of output (./)')
 def barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir):
-    from baseq.drops.barcode_split import barcode_split
+    from baseq.drops.barcode.split import split_16
     print('[info] Split the cell barcodes ...')
-    barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir)
+    split_16(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir)
 
 
 @cli.command(short_help="Split Barcode")
@@ -155,7 +178,7 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir):
 @click.option('--maxcell', default=10000, help='Max cell number')
 @click.option('--dir', '-d', default='./', help='Folder of output (./)')
 def barcode_split_fast(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir):
-    from baseq.drops.barcode_split_fast import barcode_splits_all
+    from baseq.drops.barcode.split_fast import barcode_splits_all
     print('[info] Split the cell barcodes ...')
     barcode_splits_all(name, protocol, bcstats, fq1, fq2, minreads, maxcell, dir)
 

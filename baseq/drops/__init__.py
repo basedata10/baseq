@@ -1,1 +1,1 @@
-from .cmd import cli
+from baseq.drops.cmd import cli

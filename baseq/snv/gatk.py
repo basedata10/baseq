@@ -1,8 +1,8 @@
 import os
 from baseq.mgt import get_config, run_cmd
 
-PICARD = get_config("SNV", "picard")
-GATK = get_config("SNV", "GATK")
+# PICARD = get_config("SNV", "picard")
+# GATK = get_config("SNV", "GATK")
 
 bwa_cmd_script_p = r"""{bwa} mem -t {thread} -M -R "@RG\tID:{sample}\tSM:{sample}\tLB:WES\tPL:Illumina" {genome} {fq1} {fq2}  1>{samfile}"""
 bwa_cmd_script_s = r"""{bwa} mem -t {thread} -M -R "@RG\tID:{sample}\tSM:{sample}\tLB:WES\tPL:Illumina" {genome} {fq1} 1>{samfile}"""
@@ -12,7 +12,11 @@ sort_index_cmd_script = """
 {samtools} index {outfile}
 rm {samfile}
 """
-def run_alignment(fq1, fq2, sample, genome, outfile, thread=8):
+
+def alignment(fq1, fq2, sample, genome, outfile, thread=8):
+    """
+    Map fastq1/2 files into genome using BWA. Add tags to bamfile using the input sample name. The bamfile is named as outfile.
+    """
     bwa = get_config("SNV", "bwa")
     samtools = get_config("SNV", "samtools")
     genome = get_config("SNV_ref_"+genome, "bwa_index")
@@ -33,6 +37,11 @@ markdup_cmd_script ="""
 """
 
 def run_markdup(bamfile, markedbam):
+    """
+    Run MarkDuplicate of Picard. Generate the bai for the marked bamfile.
+    ::
+        run_markdup("in.bam", "in.marked.bam")
+    """
     java = get_config("SNV", "java")
     picard = get_config("SNV", "picard")
     samtools = get_config("RNA", "samtools")
@@ -50,6 +59,14 @@ bqsr_cmd_script_DRF = """
 """
 
 def bqsr(markedbam, bqsrbam, genome, disable_dup_filter=False):
+    """
+    Run BQSR_.
+    ::
+        bqsr()
+        This will generate a XXXX...
+
+    .. _BQSR: https://gatkforums.broadinstitute.org/gatk/discussion/44/base-quality-score-recalibration-bqsr
+    """
     gatk = get_config("SNV", "GATK")
     index = get_config("SNV_ref_"+genome,"bwa_index")
     DBSNP = get_config("SNV_ref_"+genome,"DBSNP")
@@ -86,6 +103,9 @@ selectvar_cmd_script = """
 """
 
 def selectvar(rawvcf,selectvcf,filtervcf,genome,run=True):
+    """
+    Select Variants, it process the XX from XX, genrate XX for XX...
+    """
     GATK = get_config("SNV", "GATK")
     index = get_config("SNV_ref_" + genome, "bwa_index")
     selectvar_cmd = selectvar_cmd_script.format(gatk=GATK,index=index,rawvcf=rawvcf,selectvcf=selectvcf,filtervcf=filtervcf)
@@ -143,8 +163,6 @@ def filter_mutect_vcf(somaticvcf,calcontam_table,filter_call):
     filtercall_cmd = filtercall_cmd_script.format(gatk=gatk, somaticvcf=somaticvcf, calcontam_table=calcontam_table,
                                                     filter_call=filter_call)
     run_cmd("filter mutect calls using contamination table","".join(filtercall_cmd))
-
-
 
 
 def listofvcf(path):

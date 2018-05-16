@@ -7,3 +7,4 @@ def cli():
     pass
 
 from .cmd import *
+from .bamtype import BAMTYPE

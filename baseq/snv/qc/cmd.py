@@ -8,7 +8,7 @@ import pandas as pd
 @click.option('--intervals', '-r', default = '', help = '')
 @click.option('--name', '-n', default = 'Sample', help = 'Outfile (Excel/Table)')
 def qc_enrich(bamlist, bampath, intervals, name):
-    from baseq.snv.qc.enrich import quality_of_enrich_sample
+    from baseq.snv.qc.enrich import enrich_qc
     if bamlist:
         with open(bamlist, 'r') as file:
             lines = file.readlines()
@@ -22,7 +22,7 @@ def qc_enrich(bamlist, bampath, intervals, name):
     import multiprocessing as mp
     pool = mp.Pool(processes = 1)
     for bam in bams:
-        results.append(pool.apply_async(quality_of_enrich_sample, (bam[0], bam[1], intervals)))
+        results.append(pool.apply_async(enrich_qc, (bam[0], bam[1], intervals)))
     pool.close()
     pool.join()
     print(results)

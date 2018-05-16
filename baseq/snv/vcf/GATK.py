@@ -3,6 +3,17 @@ import re
 import numpy as np
 
 def vcf_stats(sample, vcfpath, min_depth=50):
+    """
+    Stats on the VCF from GATK
+    ::
+        vcf_stats("sample1", "path/to/vcf", min_depth=30)
+
+    Return:
+        A dict/json containing:
+        Samplename/counts/mean_depth/GT_01/GT_11/MAF
+        MAF is minor allel frequency.
+    """
+
     print("[info] {} {}".format(sample, vcfpath))
 
     df = pd.read_table(vcfpath, comment="#", header=None,

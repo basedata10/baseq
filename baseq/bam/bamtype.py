@@ -4,6 +4,7 @@ from jinja2 import Template
 from baseq.utils.runcommand import run_it, run_generator
 from baseq.bed import BEDFILE
 from multiprocessing.pool import ThreadPool
+from baseq.bam.cigar import overlap
 
 """
 reads_total/reads_mapped/reads_mapratio/
@@ -13,6 +14,14 @@ region_length/region_mean_depth/region_total_bases/
 """
 
 class BAMTYPE:
+    """
+    BAM File Handler, Based on samtools.
+    While initiate, it read the path using samtools and will parse the headers.
+
+    Usage:
+        * Stats on enrichment quality.
+
+    """
     def __init__(self, path, bedfile=""):
         if not os.path.exists(path):
             sys.exit("[error] Bam File {} Not Exists".format(path))
@@ -24,7 +33,6 @@ class BAMTYPE:
         self.chrs = {chr[0]:chr[1] for chr in chrs}
         self.path = path
         self.reads = 0
-        self.match_bases = 0
 
         #bam index file
         self.index = os.path.abspath(path+".bai")
@@ -38,11 +46,38 @@ class BAMTYPE:
             self.bedfile = None
 
     def get_columns(self, rows=10000, colIdx=6):
+        """
+        Read the bamfile using samtools, get the infors in the column<colIDx> and first <rows> of Rows.
+        The columns of bam files are:
+
+        #. header
+        #. flags
+        #. chromosome
+        #. start
+        #. mapping quality
+        #. cigar
+
+        The colIdx start from 1.
+        ::
+          BAMTYPE(path).get_columns(1000, 3)
+          # ['chr1', 'chr1', ...]
+        """
         cmd = Template("samtools view {{path}} | awk '{print ${{colIdx}}}' | head -n {{rows}}").render(path=self.path, colIdx=colIdx, rows=rows)
         lines = run_it(cmd)
         return lines
 
     def region_depth(self, chr, start, end, all=False):
+        """
+        Get the depth coverage of bases in the region.
+        It will suitable for chromesome name like "chr1" and "1".
+
+        :param all: Shall the bases with zero coverge be returned.
+
+        Usage:
+        ::
+            BAMTYPE(path).region_depth("chr1", 1000, 2000, all=True)
+            `return depth list [0,1,1,1,2,2,2,3,0]`
+        """
         chr = str(chr)
         depth = []
         if chr in self.chrs:
@@ -60,13 +95,29 @@ class BAMTYPE:
         return depth
 
     def region_bed_depth(self, bedfile):
+        """
+        The depth of regions in an bed file.
+
+        .. todo::
+
+           This function is not suitable for sending spam e-mails.
+
+        """
         results = run_generator("samtools depth -b {} {}".format(bedfile, self.path))
         depth = []
         for line in results:
             depth.append(int(line.split()[2]))
         return depth
 
-    def stats_reads(self):
+    def stats_bam(self):
+        """
+        Read the bampath.stat, if not exists, perform the `samtools flagstat`
+        The results will be:
+
+        #. self.reads_total
+        #. self.reads_mapped
+        #. self.mapping_ratio
+        """
         stat_file = self.path + ".stat"
         if os.path.exists(stat_file):
             print("[info] {} Exists".format(stat_file))
@@ -89,9 +140,11 @@ class BAMTYPE:
         print("[info] Reads Stats, Total {}, Mapped {}, Ratio {}".format(total, mapped, self.mapping_ratio))
 
     def stats_bases(self):
-        #Stats on the mean match length for the top 100K reads in the bam file
+        """
+        Stats on the mean match length for the top 100K reads in the bam file
+        """
         from baseq.bam.cigar import match_length
-        self.stats_reads()
+        self.stats_bam()
         lines = self.get_columns(100000, 6)
         length = [match_length(line) for line in lines if 'M' in line]
         self.match_length = round(np.mean(length), 3)
@@ -99,6 +152,10 @@ class BAMTYPE:
         print("[info] Mean matched read length: {}".format(self.match_length))
 
     def stats_duplicates(self):
+        """
+        Stats Duplication Rates from the top 1M reads;
+        The duplication should be reflected in the flag
+        """
         flags = self.get_columns(1000000, 2)
         dups = sum([1 for x in flags if int(x) & 1024])
         self.dup_ratio = round(float(dups)/1000000,3)
@@ -111,11 +168,21 @@ class BAMTYPE:
             print("[info] No Bed File Exists")
 
     def stats_region_coverage(self, numbers=1000):
-        intervals = self.bedfile.sampling(int(numbers))
-        #split the intervals into 10 files...
-        #paths = self.bedfile.sample_split_files()
-        #print(paths)
+        """
+        Check the enrichment quality.
 
+        * Require a bedfile while initiating the class
+        * Select <numbers> regions randomly
+        * Use multithread pool to get the coverage depth of the regions
+        * Stats on the ratio of 10X, 30X, 50X and 100X bases
+
+        Usage:
+        ::
+            BAMTYPE("sample.bam", "panel.bed").stats_region_coverage(1000)
+            The results will be save in object properies:
+            self.mean_depth/self.pct_10X/..
+        """
+        intervals = self.bedfile.sampling(int(numbers))
         pool = ThreadPool(processes=10)
         results = []
         total_bases = 0
@@ -137,18 +204,33 @@ class BAMTYPE:
         print("[info] StatBases {}, Mean {}, 10X {}, 30X {}, 50X {}, 100X {}".format(total_bases, self.mean_depth, self.pct_10X, self.pct_30X, self.pct_50X, self.pct_100X))
 
     def get_reads(self, chr, start, end):
-        print(chr, start, end)
+        """
+        Return The Reads that overlaps with region chrN:start-end.
+
+        * Skip reads contains "N" cigar.
+        """
         chr = str(chr)
         if chr in self.chrs:
             chr_real = chr
         elif chr.startswith("chr") and chr[3:] in self.chrs:
             chr_real = chr[3:]
         results = run_generator("samtools view {} {}:{}-{}".format(self.path, chr_real, start, end))
-        datas = []
+        reads = []
         for x in results:
             lines = x.split()
-            datas.append(lines[0:6])
-        return datas
+            flags = lines[5]
+            #overlap_length = overlap(flags, lines[3], start, end)
+            #if overlap_length<=30:
+            if re.search("N", flags):
+                print(flags)
+                pass
+            else:
+                reads.append(lines[0:6])
+        return reads
 
-    def bam_read_counts(self, chr, star, end):
+    def read_counts(self, chr, star, end):
+        """
+        Todo:
+            * For module TODOs
+        """
         pass

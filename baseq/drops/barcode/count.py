@@ -1,11 +1,24 @@
 import pandas as pd
-from baseq.utils.file_reader import read_file_by_lines
 from time import time
+from baseq.utils.file_reader import read_file_by_lines
 
 def HammingDistance(seq1, seq2):
     return sum([1 for x in zip(seq1, seq2) if x[0] != x[1]])
 
-def cut_seq_barcode(protocol, seq):
+def extract_barcode(protocol, seq):
+    """Extract cell barcode from reads
+
+        * 10X: seq[0:16]
+        * indrop: seq[0:i] + seq[i + 22 : i + 22 + 8] (i is length of barcode 1)
+        * dropseq: seq[0:12]
+
+    :param protocol: 10X/indrop/drop-seq.
+    :param seq: The sequence containing cellbarcode.
+
+    Return:
+        barcode: barcode, if no valid barcode, return ""
+    """
+
     if protocol == "10X":
         return seq[0:16]
     if protocol == "dropseq":
@@ -25,6 +38,19 @@ def cut_seq_barcode(protocol, seq):
         return ""
 
 def count_barcodes(path, output, protocol, min_reads, topreads=100):
+    """Count thre number of Each barcode
+
+    :param path: fastq file.
+    :param output: The stats will write to ...
+    :param protocol: Protocol
+    :param min_reads: minimum reads
+    :param topreads: process max N million reads
+
+    Return:
+        A barcode_count file will be generated.
+        cellbarcode/counts
+    """
+
     bc_counts = {}
     index = 0
     start = time()
@@ -33,7 +59,7 @@ def count_barcodes(path, output, protocol, min_reads, topreads=100):
     lines = read_file_by_lines(path, topreads * 1000 * 1000, 4)
     for line in lines:
         index += 1
-        bc = cut_seq_barcode(protocol, line[1])
+        bc = extract_barcode(protocol, line[1])
         if index % 1000000 == 0:
             print("[info] Processed {}M lines in {}s".format(index/1000000, round(time()-start, 2)))
             start = time()

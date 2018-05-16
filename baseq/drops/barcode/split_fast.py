@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from time import time
 from baseq.utils.file_reader import read_filelines
-from baseq.drops.barcode_count import cut_seq_barcode
+from baseq.drops.barcode.count import extract_barcode
 
 from itertools import product
 barcode_prefix = [x[0]+x[1] for x in list(product('ATCG', repeat=2))]
@@ -73,7 +73,7 @@ def barcode_split(name, protocol, bcstats, fq1, fq2, dir, size, skip):
                 files[key].writelines("\n".join(buffers[key])+"\n")
                 buffers[key] = []
 
-        bc = cut_seq_barcode(protocol, read1[1])
+        bc = extract_barcode(protocol, read1[1])
         if bc in barcode_corrected:
             bc_corrected = barcode_corrected[bc]
         else:

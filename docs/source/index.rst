@@ -20,19 +20,26 @@ Install
 
 Guidance For Developer
 ----------------------
-
 .. toctree::
    :maxdepth: 1
 
    guidance/value
-   guidance/cmd
-   guidance/docs
+   guidance/click
+   guidance/rsts
+   guidance/docrules
    guidance/test
 
-   guidance/multiprocess
-   guidance/callcmd
-   guidance/plots
-   guidance/pandas
+Knowledges
+-----------
+.. toctree::
+   :maxdepth: 1
+
+   support/multiprocess
+   support/callcmd
+   support/plots
+   support/pandas
+   support/Excel
+   support/PPT
 
 Commands and APIs
 ------------------
@@ -40,6 +47,7 @@ Commands and APIs
 .. toctree::
    :maxdepth: 1
 
+   baseq/fastq
    baseq/BAM
    baseq/CNV
    baseq/SNV

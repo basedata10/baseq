@@ -47,6 +47,9 @@ def check_sample_files(samplefile="", name="", fq1="", fq2=""):
     return samples
 
 def list_fastq_files(sampleDir, writeFile):
+    """
+    List the files in the directory; Extract the sample files and write to a folder;
+    """
     files = [file for file in os.listdir(sampleDir) if os.path.isfile(os.path.join(sampleDir, file))]
     out = []
     samples = {}

@@ -1,6 +1,6 @@
 .. _cmd:
 
-命令行
+软件命令化
 ==========
 我们使用click库将函数封装成命令。可以在命令行中，在任何路径下对于函数进行调用，方便开发和测试。
 
@@ -26,6 +26,6 @@ Click 的使用模式如下
         print(subject, message, attches)
         Client().send_mail(subject, message, attches)
 
-调用命令
+上面定义了一个发送email的命令，通过如下方式调用：
 ::
     baseq email -s "Hello World." -m "Thanks for your help" -a infos.txt

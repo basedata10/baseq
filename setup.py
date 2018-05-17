@@ -36,6 +36,7 @@ setup(
         'numpy',
         'matplotlib',
         'jinja2',
+        'statsmodels',
         'click',
         'configparser',
         'peakutils',

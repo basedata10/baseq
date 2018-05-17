@@ -3,8 +3,11 @@ from baseq.mgt import get_config, run_cmd
 import pandas as pd
 
 def bin_counting(genome, bamfile, out):
-    import bisect
+    """
+    bin counting using bisect for dynamicbin...
+    """
 
+    import bisect
     dynamic_bin = get_config("CNV_ref_"+genome, "dynamic_bin")
     df_bin = pd.read_table(dynamic_bin, sep="\t")
 

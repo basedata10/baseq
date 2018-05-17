@@ -10,7 +10,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-def Normalize_GC(genome, bincount, path_out):
+def Normalize_GC_py(genome, bincount, outpath):
     """Normalize the Raw bin counts with GC contents...
     Run a Rscript named as 'Lowess.R'.
     Args:
@@ -22,18 +22,6 @@ def Normalize_GC(genome, bincount, path_out):
     Output:
         GC_content_image: images
         Normalized bin counts (1M)
-    """
-    script = os.path.join(r_script_dir, "Lowess.R")
-    dynamic_bin = get_config("CNV_ref_"+genome, "dynamic_bin")
-    cmd = "Rscript {} {} {} {}".format(script, bincount, dynamic_bin, path_out)
-    try:
-        run_cmd("Normalize ", cmd)
-    except:
-        sys.exit("[error] Failed to run the Normalize Rscript ...")
-
-def Normalize_GC_py(genome, bincount, outpath):
-    """
-    Using a python function ...
     """
     dynamic_bin = get_config("CNV_ref_"+genome, "dynamic_bin")
     df_counts = pd.read_table(bincount)

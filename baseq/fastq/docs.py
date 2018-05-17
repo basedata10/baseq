@@ -16,9 +16,8 @@ baseq-fastq qc -m samples.txt
 #trim the fastq files...
 baseq-fastq filter_polyat -m samples.txt -t 10 --seqfile ./seqs.txt
 baseq-fastq filter_polyat -m samples.txt -t 5 --seqfile ./seqs.txt
+
 ##seqs.txt
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
 """
 

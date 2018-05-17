@@ -5,7 +5,7 @@ pd.set_option('precision', 3)
 def fastq_basecontent_quality(sample, fastq_path, maxLines = 10000):
     """
     Generate the basic quality stats of the fastq file
-    return:
+    Return:
         dataframe: A/T/C/G/quality;
         base content figure in base64;
         base quality figure in base64;

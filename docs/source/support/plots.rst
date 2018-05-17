@@ -1,4 +1,4 @@
-绘图
+绘图 Matplotlib
 ===============
 常见的Python绘图库是 Matplotlib_ ，点击查看教程。
 seaborn_ 在matplotlib的基础上进行开发，简化了调用方式，更容易上手，可以无缝集成到使用matplotlib的代码中。

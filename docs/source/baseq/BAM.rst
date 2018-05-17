@@ -1,7 +1,7 @@
 .. _BAM:
 
-BAM File Manipulation
-======================
+BAM
+====
 
 Functions
 ______________

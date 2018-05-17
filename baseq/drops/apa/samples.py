@@ -22,7 +22,7 @@ def APA_usage(bamfile, APA_sitefile, celltype, gene):
 
     Returnsass:
         Generate a heatmap;
-        Print the Read cou
+        Print the Read count;
     """
     from baseq.bam import BAMTYPE
     bam = BAMTYPE(bamfile)

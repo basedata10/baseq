@@ -1,17 +1,21 @@
-RNA-Seq:
-===========
+RNA-Seq
+=========
+RNASeq 是一种非常成熟的对于细胞或者组织的基因表达进行定量的技术。
+The core tasks are:
 
-Design
--------
-The key question for Drops Pipeline design.
+- Gene quantification
+- Differential Expression
 
-- Split the barcode;
-- Tagging reads from genome position;
-
-Tasks
-----------------------
+Gene Quantification
+--------------------
 .. toctree::
    :maxdepth: 2
 
-   diff_express
    quantify
+
+Diff Genes
+-----------
+.. toctree::
+   :maxdepth: 2
+
+   diffgene

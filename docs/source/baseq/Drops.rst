@@ -1,9 +1,5 @@
-.. _Drops:
-
-.. module::baseq.drops
-
-Drops:
-====================
+DropsRNA
+===========
 
 Design
 -------

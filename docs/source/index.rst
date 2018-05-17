@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to BeiSeq
-=================================
+Basic of beiseq
+=======================
 
 .. toctree::
    :maxdepth: 2
@@ -20,39 +20,30 @@ Install
 
 Guidance For Developer
 ----------------------
-.. toctree::
-   :maxdepth: 2
 
-   guidance/phil
+.. toctree::
+   :maxdepth: 1
+
+   guidance/value
    guidance/cmd
    guidance/docs
+   guidance/test
 
-Develop Interfaces
+   guidance/multiprocess
+   guidance/callcmd
+   guidance/plots
+   guidance/pandas
+
+Commands and APIs
 ------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   BAM
-   CNV
-   SNV
+   baseq/BAM
+   baseq/CNV
+   baseq/SNV
    RNA/index
-   Drops/Drops
-
-* :ref:`modindex`
-
-Table
------
-
-=====  =====  ======
-   Inputs     Output
-------------  ------
-  A      B    A or B
-=====  =====  ======
-False  False  False
-True   False  True
-False  True   True
-True   True   True
-=====  =====  ======
+   baseq/Drops
 
 `Docs for this project <http://packages.python.org/an_example_pypi_project/>`

@@ -12,13 +12,13 @@ def enrich_saturation(bampath, interval, outpath):
 @cli.command(short_help="Bwa alignment")
 @click.option('--fq1', '-1', default='', help='fastq1 path')
 @click.option('--fq2', '-2', default='', help='fastq2 path (optional)')
-@click.option('--name', '-n', default='', help='prefix of bamfile')
+@click.option('--name', '-n', default='', help='sample name(ID)')
 @click.option('--thread', '-t', default='8', help='Thread for BWA')
 @click.option('--genome','-g', default='', help='Species hg19 or mm10/mm38')
-@click.option('--outfile','-o', default='', help='bamfile name')
-def run_bwa(fq1, fq2, name, genome, outfile, thread):
+
+def run_bwa(fq1, fq2, name, genome, thread):
     from baseq.snv.gatk import alignment
-    alignment(fq1, fq2, name, genome, outfile, thread)
+    alignment(fq1, fq2, name, genome, thread)
     print("[info] alignment complete")
 
 @cli.command(short_help="mark duplicates")

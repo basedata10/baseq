@@ -8,25 +8,39 @@ bwa_cmd_script_p = r"""{bwa} mem -t {thread} -M -R "@RG\tID:{sample}\tSM:{sample
 bwa_cmd_script_s = r"""{bwa} mem -t {thread} -M -R "@RG\tID:{sample}\tSM:{sample}\tLB:WES\tPL:Illumina" {genome} {fq1} 1>{samfile}"""
 sort_index_cmd_script = """
 {samtools} view -b -u -S {samfile}>{viewedbam}
-{samtools} sort -@ 8 {viewedbam} -o {outfile}
-{samtools} index {outfile}
-rm {samfile}
+{samtools} sort -@ 8 {viewedbam} {sample}
+{samtools} index {sample}.bam
+rm {samfile} {viewedbam}
 """
 
-def alignment(fq1, fq2, sample, genome, outfile, thread=8):
+def alignment(fq1, fq2, sample, genome, thread=8):
     """
-    Map fastq1/2 files into genome using BWA. Add tags to bamfile using the input sample name. The bamfile is named as outfile.
+    Map low-divergent sequences against reference genome using BWA.
+    Add ReadGroup(more details about ReadGroup_ )to bamfile using the input sample name.
+    Outfile is in BAM format and indexed for the downstream analysis.
+
+    .. _ReadGroup: https://software.broadinstitute.org/gatk/documentation/article.php?id=6472
+
+    Usage:
+    ::
+      baseq-SNV run_bwa -1 Reads.1.fq.gz -2 Read.2.fq.gz -g hg38 -n Test
+
+    Return:
+    ::
+      Test.bam
+      Test.bam.bai
+
     """
     bwa = get_config("SNV", "bwa")
     samtools = get_config("SNV", "samtools")
     genome = get_config("SNV_ref_"+genome, "bwa_index")
-    viewedbam = outfile + ".view.bam"
-    samfile = outfile+".sam"
+    viewedbam = sample + ".view.bam"
+    samfile = sample + ".sam"
     if fq1 and fq2 and os.path.exists(fq1) and os.path.exists(fq2):
         bwa_cmd = bwa_cmd_script_p.format(bwa=bwa, sample=sample, genome=genome, fq1=fq1, fq2=fq2, samfile=samfile, thread=thread)
     elif fq1 and os.path.exists(fq1):
         bwa_cmd = bwa_cmd_script_s.format(bwa=bwa, sample=sample, genome=genome, fq1=fq1, samfile=samfile, thread=thread)
-    sort_index_cmd=sort_index_cmd_script.format(samtools=samtools, outfile=outfile, samfile=samfile,viewedbam=viewedbam)
+    sort_index_cmd=sort_index_cmd_script.format(samtools=samtools, sample=sample, samfile=samfile,viewedbam=viewedbam)
     run_cmd("bwa alignment", "".join(bwa_cmd))
     run_cmd("samtools sort", "".join(sort_index_cmd))
     return bwa_cmd+"\n"+sort_index_cmd
@@ -38,9 +52,22 @@ markdup_cmd_script ="""
 
 def run_markdup(bamfile, markedbam):
     """
-    Run MarkDuplicate of Picard. Generate the bai for the marked bamfile.
+    Run MarkDuplicates of Picard. this function tags duplicate reads with "markduplicate" in BAM file.
+    See also MarkDuplicates_ in GATK.
+
+
+    .. _MarkDuplicates: https://software.broadinstitute.org/gatk/documentation/tooldocs/current/picard_sam_markduplicates_MarkDuplicates.php
+
+    Usage:
     ::
-        run_markdup("in.bam", "in.marked.bam")
+      baseq-SNV run_markdup -b Test.bam -m Test.marked.bam
+
+    Return:
+    metrics file indicates the numbers of duplicates for both single- and paired-end reads
+    ::
+      Test.marked.bam
+      Test.marked.bam.bai
+      Test.marked.bam.metrics
     """
     java = get_config("SNV", "java")
     picard = get_config("SNV", "picard")
@@ -60,12 +87,30 @@ bqsr_cmd_script_DRF = """
 
 def bqsr(markedbam, bqsrbam, genome, disable_dup_filter=False):
     """
-    Run BQSR_.
-    ::
-        bqsr()
-        This will generate a XXXX...
+    Run BQSR_. This function performs the two-steps process called base quality score recalibration. the first
+    ster generates a recalibration table based on various covariates which is recruited to the second step to
+    correct the systematic bias in input BAM file. More details about BaseRecalibrator_ and ApplyBQSR_ .
+
 
     .. _BQSR: https://gatkforums.broadinstitute.org/gatk/discussion/44/base-quality-score-recalibration-bqsr
+    .. _BaseRecalibrator: https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_hellbender_tools_walkers_bqsr_BaseRecalibrator.php
+    .. _ApplyBQSR: https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_hellbender_tools_walkers_bqsr_ApplyBQSR.php
+
+    Usage:
+
+    * Default mode filters duplicate reads (reads with "markduplicate" tags) before applying BQSR
+      ::
+         baseq-SNV run_bqsr -m Test.marked.bam -g hg38 -q Test.marked.bqsr.bam
+
+    * Disable reads filter before analysis.
+      ::
+        baseq-SNV run_bqsr -m Test.marked.bam -g hg38 -q Test.marked.bqsr.bam -f Yes
+
+    Return:
+    ::
+      Test.marked.bam.table
+      Test.marked.bqsr.bai
+      Test.marked.bqsr.bam
     """
     gatk = get_config("SNV", "GATK")
     index = get_config("SNV_ref_"+genome,"bwa_index")
@@ -87,6 +132,22 @@ callvar_cmd_script = """
 """
 
 def run_callvar(bqsrbam, rawvcf, genome, disable_dup_filter = False):
+    """
+    Call germline SNPs and indels via local re-assembly of haplotypes. BAM file recalbrated by BQSR do recommand as
+    input BAM file and this functin only run the single sample genotypeVCF calling. More details see also
+    HaplotypeCaller_
+
+    .. _HaplotypeCaller: https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_hellbender_tools_walkers_haplotypecaller_HaplotypeCaller.php
+
+    Usage:
+    ::
+      baseq-SNV run_callvar -q Test.marked.bqsr.bam -r Test.raw.indel.snp.vcf -g hg38
+
+    Return:
+    ::
+      Test.raw.indel.snp.vcf
+
+    """
     GATK = get_config("SNV", "GATK")
     index = get_config("SNV_ref_" + genome, "bwa_index")
     interval = get_config("SNV_ref_" + genome, "interval")
@@ -104,7 +165,22 @@ selectvar_cmd_script = """
 
 def selectvar(rawvcf,selectvcf,filtervcf,genome,run=True):
     """
-    Select Variants, it process the XX from XX, genrate XX for XX...
+    This function selects SNPs from a VCF file which is usually the output file of
+    HaplotypeCaller. Then, all SNPs are filtered by certain criteria based on INFO and/or FORMAT annotations.
+    Criteria used here is "QD < 2.0 || FS > 60.0 || MQ < 40.0".
+    More details about SelectVariants_ and VariantFiltration_
+
+    .. _SelectVariants: https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_hellbender_tools_walkers_variantutils_SelectVariants.php
+    .. _VariantFiltration: https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_hellbender_tools_walkers_filters_VariantFiltration.php
+
+    Usage:
+    ::
+      baseq-SNV run_selectvar -r Test.raw.indel.snp.vcf -s Test.raw.snp.vcf -f Test.filtered.snp.vcf -g hg38
+
+    Return:
+    ::
+      Test.raw.snp.vcf
+      Test.filtered.snp.vcf
     """
     GATK = get_config("SNV", "GATK")
     index = get_config("SNV_ref_" + genome, "bwa_index")
@@ -120,6 +196,41 @@ mutect2_cmd_stardand_script="""
 {gatk} Mutect2 -R {index} -I {normalbam} -normal {normalname} -I {tumorbam} -tumor {tumorname} --germline-resource {germline} --panel-of-normals {pon} -O {vcffile}
 """
 def mutect2(genome, normalname, normalbam, tumorname, tumorbam, vcffile, pon, germline):
+    """
+    Mutect2 is aim to call somatic SNVs and indels via local assembly of haplotypes. This function requires both
+    tumor BAM file and its matched normal BAM file. tumorname and normalname should be consistent with the ReadGroup(ID) of tumor
+    BAM file and normal BAM file respectively. PoN is refer to panel of normals callset(more infomation about PoN and how to
+    create it, please see PoN_ ). Germline resource, also in VCF format, is used to annotate variant alleles. Default germline resource is
+    downloaded from here_ .
+
+    .. _here: https://software.broadinstitute.org/gatk/download/bundle
+    .. _PoN: https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_hellbender_tools_walkers_mutect_CreateSomaticPanelOfNormals.php
+
+    Usage:
+
+    * Simplified Mutect2 command line
+      ::
+        # single sample
+        baseq-SNV run_mutect2 -g hg37 -n normal -N normal_marked_bqsr.bam \\
+                                      -t tumor -T tumor_marked_bqsr.bam -o ./
+        # multiple samples
+        baseq-SNV run_mutect2 -g hg37 -l sample_list.txt -o ./
+
+    * Specify PoN(panels of normals) VCF file and germline VCF file
+      Default germline VCF file comes form GATK resource bundle and is recruited if germline isn't designated.
+      ::
+        # single sample
+        baseq-SNV run_mutect2 -g hg37 -n normal -N normal_marked_bqsr.bam \\
+                                      -t tumor -T tumor_marked_bqsr.bam -o ./ \\
+                                      -p pon.vcf.gz -G af-only-gnomad.raw.sites.b37.vcf.gz
+        # multiple samples
+        baseq-SNV run_mutect2 -g hg37 -l sample_list.txt -o ./ \\
+                                      -p pon.vcf.gz -G af-only-gnomad.raw.sites.b37.vcf.gz
+
+    """
+
+
+
     gatk = get_config("SNV","GATK")
     index = get_config("SNV_ref_" + genome, "bwa_index")
     if pon :
@@ -186,6 +297,32 @@ pon_cmd_script="""
 {gatk} CreateSomaticPanelOfNormals -vcfs {normalvcfs} -O {ponvcf}
 """
 def create_pon(genome,list,path,interval):
+    """
+    Create_pon function helps you create PoN(panel of normals) file necessary for mutect2 calling. The PoN captures
+    common artifactual and germline variant sites. Mutect2 then uses the PoN to filter variants at the site-level.
+
+    Example of samples list (tab delimited):
+
+    * Content of columns are normal sample name, normal BAM file, tumor sample name, tumor BAM file(order cannot be distruped).
+      Absoulte path of all BAM files should be added if directory of BAM files and analysis directory are different.
+      ::
+        N504    N504_marked_bqsr.bam   T504    T504_marked_bqsr.bam
+        N505    N505_marked_bqsr.bam   T505    T505_marked_bqsr.bam
+        N506    N506_marked_bqsr.bam   T506    T506_marked_bqsr.bam
+        N509    N509_marked_bqsr.bam   T509    T509_marked_bqsr.bam
+        N510    N510_marked_bqsr.bam   T510    T510_marked_bqsr.bam
+
+    Usage:
+    
+    * Interval list defines genomic regions where analysis is restricted. Introduction of interval list format and its function, please see here_.
+      ::
+        # designated a intervals.list
+        baseq-SNV create_pon -g hg37 -l sample_list.txt -p ./ -L interval.list
+        # Using the dafalut intervals.list
+        baseq-SNV create_pon -g hg37 -l sample_list.txt -p ./
+
+    .. _here: https://software.broadinstitute.org/gatk/documentation/article?id=11009
+    """
     index = get_config("SNV_ref_" + genome, "bwa_index")
     gatk = get_config("SNV", "GATK")
     if not os.path.exists(path):
